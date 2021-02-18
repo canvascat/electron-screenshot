@@ -4,7 +4,7 @@
   "scripts": {
     "dev": "vite",
     "check": "vuedx-typecheck .",
-    "build": "vuedx-typecheck . && vite build",
+    "build": "vite build",
     "serve": "vite preview"
   },
   "dependencies": {
@@ -14,6 +14,7 @@
   },
   "devDependencies": {
     "@types/lodash": "^4.14.168",
+    "@types/node": "^14.14.28",
     "@vitejs/plugin-vue": "^1.1.4",
     "@vue/compiler-sfc": "^3.0.5",
     "@vuedx/typecheck": "^0.6.0",
