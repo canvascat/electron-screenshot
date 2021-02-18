@@ -5,7 +5,8 @@
     "dev": "vite",
     "check": "vuedx-typecheck .",
     "build": "vite build",
-    "serve": "vite preview"
+    "serve": "vite preview",
+    "publish": "vite build && node ./scripts/publish.js"
   },
   "dependencies": {
     "lodash": "^4.17.20",
