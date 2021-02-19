@@ -32,7 +32,7 @@ import {
   ref,
   watch,
 } from 'vue'
-import { action, actionHistory, bound, canvasRef, captureLayer, imageSource, inited } from 'src/store'
+import { action, actionHistory, bound, canvasRef, captureLayer, drawBound, imageSource, inited, updateDrawBound } from 'src/store'
 import InfoBox from './components/info-box.vue'
 import ToolBox from './components/tool-box.vue';
 import {
@@ -47,8 +47,8 @@ import {
   once,
   removeResizeListener,
 } from 'src/util/dom'
-import { rafThrottle } from 'src/util/util'
-import { cloneDeep } from 'lodash'
+import { pointDistance, rafThrottle } from 'src/util/util'
+import { bind, cloneDeep, isEqual } from 'lodash'
 import { updateCanvas } from './util/canvas';
 
 const RESIZE_POINTS: Array<ResizePoint> = [
@@ -62,6 +62,8 @@ const RESIZE_POINTS: Array<ResizePoint> = [
   { position: ['bottom', 'left'], cursor: 'nesw-resize' },
 ]
 
+const MIN_POINT_DISTANCE = 5
+
 export default defineComponent({
   name: 'App',
 
@@ -69,7 +71,7 @@ export default defineComponent({
     InfoBox, ToolBox
   },
 
-  setup(props) {
+  setup() {
     const wrapRef = ref(null as Nullable<HTMLDivElement>)
     let cursorDownPoint: Nullable<Point> = null
     const mousePoint = ref(<Nullable<Point>>null)
@@ -81,7 +83,7 @@ export default defineComponent({
       () => action.value && ['CREATE', 'RESIZE'].includes(action.value),
     )
 
-    const brushPath:Array<Point> = []
+    const brushPath: Array<Point> = []
 
     // CSSStyleDeclaration
     const captureLayerStyle = computed(() => {
@@ -108,7 +110,7 @@ export default defineComponent({
       bound.x.max = clientWidth
       bound.y.max = clientHeight
       await nextTick()
-      ctx.value!.drawImage(imageSource, 0, 0)
+      updateCanvas(actionHistory, ctx.value!, imageSource)
     })
 
     function startCapture(e: MouseEvent) {
@@ -184,13 +186,14 @@ export default defineComponent({
         case 'MOVE': {
           const { x: x2, y: y2 } = cloneCaptureLayer
           const { h, w } = captureLayer
+          const db = drawBound.value
           captureLayer.x = Math.min(
-            Math.max(x2 + dx, bound.x.min),
-            bound.x.max - w,
+            Math.max(x2 + dx, bound.x.min, (db?.x.max ?? -Infinity) - w),
+            bound.x.max - w, db?.x.min ?? Infinity
           )
           captureLayer.y = Math.min(
-            Math.max(y2 + dy, bound.y.min),
-            bound.y.max - h,
+            Math.max(y2 + dy, bound.y.min, (db?.y.max ?? -Infinity) - h),
+            bound.y.max - h, db?.y.min ?? Infinity
           )
           break
         }
@@ -210,40 +213,63 @@ export default defineComponent({
             captureLayer.x = Math.min(x1, x2)
             captureLayer.w = Math.abs(x1 - x2)
           }
+          break
         }
+        // TOOL ACTION
         case 'LINE':
           if (lastActionHistory?.id === 'LINE') {
-            lastActionHistory.path![1] = [x1, y1]
+            const endPoint = pointBoundaryTreatment([x1, y1])
+            const lastEndPoint = lastActionHistory.path![1]
+            if (isEqual(endPoint, lastEndPoint)) break
+            lastActionHistory.path![1] = endPoint
             updateCanvas(actionHistory, ctx.value!, imageSource)
           }
           break
         case 'RECT':
           if (lastActionHistory?.id === 'RECT') {
-            lastActionHistory.path![1] = [x1, y1]
+            const endPoint = pointBoundaryTreatment([x1, y1])
+            const lastEndPoint = lastActionHistory.path![1]
+            if (isEqual(endPoint, lastEndPoint)) break
+            lastActionHistory.path![1] = endPoint
             updateCanvas(actionHistory, ctx.value!, imageSource)
           }
           break
         case 'ARROW':
           if (lastActionHistory?.id === 'ARROW') {
-            lastActionHistory.path![1] = [x1, y1]
+            const endPoint = pointBoundaryTreatment([x1, y1])
+            const lastEndPoint = lastActionHistory.path![1]
+            if (isEqual(endPoint, lastEndPoint)) break
+            lastActionHistory.path![1] = endPoint
             updateCanvas(actionHistory, ctx.value!, imageSource)
           }
           break
         case 'ELLIPSE':
           if (lastActionHistory?.id === 'ELLIPSE') {
-            lastActionHistory.path![1] = [x1, y1]
+            const endPoint = pointBoundaryTreatment([x1, y1])
+            const lastEndPoint = lastActionHistory.path![1]
+            if (isEqual(endPoint, lastEndPoint)) break
+            lastActionHistory.path![1] = endPoint
             updateCanvas(actionHistory, ctx.value!, imageSource)
           }
           break
         case 'BRUSH':
           if (lastActionHistory?.id === 'BRUSH') {
-            lastActionHistory.path!.push([x1, y1])
+            const endPoint = pointBoundaryTreatment([x1, y1])
+            const [lastEndPoint] = lastActionHistory.path!.slice(-1)
+            // 不跟手😅
+            if (pointDistance(endPoint, lastEndPoint) <= MIN_POINT_DISTANCE) break
+            lastActionHistory.path!.push(endPoint)
             updateCanvas(actionHistory, ctx.value!, imageSource)
           }
           break
         default:
           break
       }
+    }
+
+    function pointBoundaryTreatment([x0, y0]: Point): Point {
+      const { x, y, w, h } = captureLayer
+      return [Math.max(Math.min(x0, x + w), x), Math.max(Math.min(y0, y + h), y)]
     }
 
     function onMouseupDocument() {
@@ -253,6 +279,7 @@ export default defineComponent({
       document.removeEventListener('mousemove', onMousemoveDocument)
       document.removeEventListener('mouseup', onMouseupDocument)
       action.value = null
+      updateDrawBound()
     }
 
     onMounted(() => {
