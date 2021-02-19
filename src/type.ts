@@ -1,5 +1,7 @@
 export type Point = [number, number]
 
+export type Path = Array<Point>
+
 export type CaptureLayer = {
   x: number
   y: number
@@ -7,7 +9,7 @@ export type CaptureLayer = {
   h: number
 }
 
-export type CaptureActionType = 'CREATE' | 'MOVE' | 'RESIZE'
+export type CaptureActionType = 'CREATE' | 'MOVE' | 'RESIZE' | 'TEXT' | 'RECT' | 'ELLIPSE' | 'LINE' | 'ARROW' | 'BRUSH'
 
 export type ResizePointPosition = 'top' | 'right' | 'bottom' | 'left'
 export type ResizePoint = {
@@ -22,4 +24,20 @@ export type BoundItem = {
 export type Bound = {
   x: BoundItem
   y: BoundItem
+}
+
+export type Action = {
+  id: string,
+  icon?: string,
+  label?: string
+}
+
+export type ToolAction = {
+  id: CaptureActionType
+} & Action
+
+export type ActionHistoryItem = {
+  id: CaptureActionType,
+  path?: Array<Point>,
+  snapshoot?: string
 }
