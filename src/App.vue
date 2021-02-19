@@ -168,8 +168,8 @@ export default defineComponent({
     function onMousemoveDocument(e: MouseEvent) {
       if (!cursorDownPoint || !action.value) return
       const [x0, y0] = cursorDownPoint
-      const x1 = Math.min(Math.max(e.x, bound.x.min), bound.x.max)
-      const y1 = Math.min(Math.max(e.y, bound.y.min), bound.y.max)
+      let x1 = Math.min(Math.max(e.x, bound.x.min), bound.x.max)
+      let y1 = Math.min(Math.max(e.y, bound.y.min), bound.y.max)
       const [dx, dy] = [x1 - x0, y1 - y0]
       mousePoint.value = [x1, y1]
       const [lastActionHistory] = actionHistory.slice(-1)
@@ -199,17 +199,22 @@ export default defineComponent({
         }
         case 'RESIZE': {
           const { h: h2, y: y2, w: w2, x: x2 } = cloneCaptureLayer
+          const db = drawBound.value
           if (resizeMode.includes('top')) {
+            y1 = Math.min(y1, db?.y.min ?? Infinity)
             captureLayer.y = Math.min(y1, y2 + h2)
             captureLayer.h = Math.abs(y2 - y1 + h2)
           } else if (resizeMode.includes('bottom')) {
+            y1 = Math.max(y1, db?.y.max ?? -Infinity)
             captureLayer.y = Math.min(y1, y2)
             captureLayer.h = Math.abs(y1 - y2)
           }
           if (resizeMode.includes('left')) {
+            x1 = Math.min(x1, db?.x.min ?? Infinity)
             captureLayer.x = Math.min(x1, x2 + w2)
             captureLayer.w = Math.abs(x2 - x1 + w2)
           } else if (resizeMode.includes('right')) {
+            x1 = Math.max(x1, db?.x.max ?? -Infinity)
             captureLayer.x = Math.min(x1, x2)
             captureLayer.w = Math.abs(x1 - x2)
           }
@@ -347,9 +352,7 @@ body > img {
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid skyblue;
-  left: -999px;
-  top: -999px;
+  outline: 1px solid skyblue;
 }
 .resize-point {
   position: absolute;
