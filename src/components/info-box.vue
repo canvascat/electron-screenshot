@@ -94,7 +94,7 @@ export default defineComponent({
   // position: fixed;
   outline: 1px solid #000;
   position: absolute;
-  z-index: 1;
+  z-index: 2;
 }
 .capture-info__view {
   // border: 2px solid #fff;

@@ -10,7 +10,7 @@ export const bound: Bound = reactive({
   y: { min: 0, max: 0 },
 })
 
-export const captureLayer: CaptureLayer = reactive({ x: 0, y: 0, h: 0, w: 0 })
+export const captureLayer: CaptureLayer = reactive({ x: -999, y: -999, h: 0, w: 0 })
 
 export const action = ref(<Nullable<CaptureActionType>>null)
 
