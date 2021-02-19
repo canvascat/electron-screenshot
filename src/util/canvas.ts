@@ -17,7 +17,7 @@ export function drawArrow(
   const minArrowHeight = Math.abs(
     (x2 - x1) / (Math.cos(alpha) * Math.cos(ARROW_ANGLE))
   );
-  const arrowHeight = Math.min(minArrowHeight, 10 + width * 5);
+  const arrowHeight = Math.min(minArrowHeight, 6 + width * 2);
   const d = x2 < x1 ? -1 : 1;
   const [x3, y3] = [
     x2 - Math.cos(alpha - ARROW_ANGLE) * arrowHeight * d,
@@ -215,6 +215,7 @@ export function updateCanvas(
         break;
       }
       case 'BRUSH':
+        // TODO 当path.length较长，绘制会出现卡顿，使用snapshoot
         drawCurve(ctx, item.path!, 4, 'red');
         break;
       default:
