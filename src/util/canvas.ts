@@ -1,6 +1,7 @@
 import { bound } from 'src/store';
 import { ActionHistoryItem, Point } from 'src/type';
 
+/** PI/6 */
 const ARROW_ANGLE = Math.PI / 6;
 
 export function drawArrow(
@@ -12,7 +13,7 @@ export function drawArrow(
 ) {
   const [x1, y1] = startPoint;
   const [x2, y2] = endPoint;
-  const alpha = Math.atan((y1 - y1) / (x1 - x2));
+  const alpha = Math.atan((y1 - y2) / (x1 - x2));
   const minArrowHeight = Math.abs(
     (x2 - x1) / (Math.cos(alpha) * Math.cos(ARROW_ANGLE))
   );
@@ -28,7 +29,7 @@ export function drawArrow(
   ];
   const [xa, ya] = [(x4 - x3) / 3, (y4 - y3) / 3];
   const [x5, y5] = [x3 + xa, y3 + ya];
-  const [x6, y6] = [x3 - xa, y3 - ya];
+  const [x6, y6] = [x4 - xa, y4 - ya];
   const paths: Array<Point> = [
     [x1, y1],
     [x5, y5],
@@ -116,13 +117,12 @@ export function drawCurve(
   let startPoint = paths[0];
   ctx.moveTo(...startPoint);
   for (let i = 1; i < paths.length - 1; i++) {
-    const [controlPoint, nextPoint] = paths.slice(i, i + 2);
-    const endPoint: Point = [
-      (nextPoint[0] - controlPoint[0]) / 2,
-      (nextPoint[1] - controlPoint[1]) / 2,
-    ];
-    ctx.quadraticCurveTo(...controlPoint, ...endPoint);
-    startPoint = endPoint;
+    /** controlPoint, nextPoint */
+    const [[cx, cy], [nx, ny]] = paths.slice(i, i + 2);
+    /** endPoint */
+    const [ex, ey] = [cx + (nx - cx) / 2, cy + (ny - cy) / 2];
+    ctx.quadraticCurveTo(cx, cy, ex, ey);
+    startPoint = [ex, ey];
   }
   ctx.lineTo(...paths.slice(-1)[0]);
   ctx.stroke();
@@ -214,6 +214,9 @@ export function updateCanvas(
         drawEllipse(ctx, startPoint, endPoint, 1, 'red');
         break;
       }
+      case 'BRUSH':
+        drawCurve(ctx, item.path!, 4, 'red');
+        break;
       default:
         break;
     }
