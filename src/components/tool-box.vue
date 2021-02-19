@@ -34,7 +34,8 @@ const TOOL_ACTIONS: Array<ToolAction> = [
   { icon: '⚪', label: '椭圆工具', id: 'ELLIPSE' },
   { icon: '╱', label: '直线工具', id: 'LINE' },
   { icon: '↗', label: '箭头工具', id: 'ARROW' },
-  { icon: '🖊', label: '笔刷工具', id: 'BRUSH' },
+  { icon: '🖊', label: '笔刷工具', id: 'BRUSH' }, // 🐎🐴
+  { icon: '🐴', label: '马赛克工具', id: 'MOSAIC' },
 ]
 
 const OPT_ACTIONS: Array<Action> = [

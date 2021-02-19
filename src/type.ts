@@ -9,7 +9,7 @@ export type CaptureLayer = {
   h: number
 }
 
-export type CaptureActionType = 'CREATE' | 'MOVE' | 'RESIZE' | 'TEXT' | 'RECT' | 'ELLIPSE' | 'LINE' | 'ARROW' | 'BRUSH'
+export type CaptureActionType = 'CREATE' | 'MOVE' | 'RESIZE' | 'TEXT' | 'RECT' | 'ELLIPSE' | 'LINE' | 'ARROW' | 'BRUSH' | 'MOSAIC'
 
 export type ResizePointPosition = 'top' | 'right' | 'bottom' | 'left'
 export type ResizePoint = {
@@ -39,5 +39,10 @@ export type ToolAction = {
 export type ActionHistoryItem = {
   id: CaptureActionType,
   path?: Array<Point>,
-  snapshoot?: string
+  snapshoot?: string,
+  // TODO
+  attr?: {
+    color: string,
+    width: number
+  }
 }

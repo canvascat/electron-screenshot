@@ -137,7 +137,6 @@ export default defineComponent({
 
     function onMousedownCaptureLayer(e: MouseEvent) {
       if (!action.value) return startMove(e)
-      console.log('TODO UPDATE TOOL => ', action.value)
       actionHistory.push({ id: action.value, path: [[e.x, e.y]] })
       startAction(e)
     }
@@ -237,6 +236,10 @@ export default defineComponent({
           }
           break
         case 'BRUSH':
+          if (lastActionHistory?.id === 'BRUSH') {
+            lastActionHistory.path!.push([x1, y1])
+            updateCanvas(actionHistory, ctx.value!, imageSource)
+          }
           break
         default:
           break
