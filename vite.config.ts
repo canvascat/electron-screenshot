@@ -8,8 +8,8 @@ export default defineConfig({
   plugins: [vue()],
   resolve: {
     alias: {
-      src: join(__dirname, 'src')
-    }
-  }
+      src: join(__dirname, 'src'),
+    },
+  },
 })
 
