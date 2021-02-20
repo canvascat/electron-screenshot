@@ -19,7 +19,7 @@
 </template>
 
 <script lang="ts">
-import { action, actionHistory, bound, canvasRef, captureLayer, imageSource, inited } from 'src/store'
+import { action, actionHistory, bound, canvasRef, captureLayer, imageSource, inited, updateDrawBound } from 'src/store'
 import { Action, CaptureActionType, ToolAction } from 'src/type'
 import { copyCanvas, downloadCanvas, updateCanvas, writeCanvasToClipboard } from 'src/util/canvas'
 import { addResizeListener, removeResizeListener } from 'src/util/dom'
@@ -88,6 +88,7 @@ export default defineComponent({
           if (actionHistory.length === 0) break
           actionHistory.pop()
           updateCanvas(actionHistory, canvasRef.value!.getContext('2d')!, imageSource)
+          updateDrawBound()
           break
         }
         default:
