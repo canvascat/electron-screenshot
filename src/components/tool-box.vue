@@ -29,11 +29,10 @@ import {
   bound,
   canvasRef,
   captureLayer,
-  imageSource,
   inited,
   updateDrawBound,
 } from 'src/store'
-import type { ActionType, CmdAction, ToolAction } from 'src/type'
+import type { ActionType, CmdAction, CmdActionType, ToolAction } from 'src/type'
 import {
   copyCanvas,
   downloadCanvas,
@@ -73,7 +72,9 @@ const OPT_ACTIONS: Array<CmdAction> = [
 export default defineComponent({
   name: 'ToolBox',
 
-  setup() {
+  emits: ['dispatch'],
+
+  setup(props, context) {
     const toolBoxRef = ref(<Nullable<HTMLDivElement>>null)
     const clientRect = reactive({ w: 0, h: 0 })
     const style = computed(() => {
@@ -100,7 +101,7 @@ export default defineComponent({
       const { width: w, height: h } = toolBoxRef.value!.getBoundingClientRect()
       Object.assign(clientRect, { w, h })
     })
-    function handleExecCmd(cmd: string) {
+    function handleExecCmd(cmd: CmdActionType) {
       switch (cmd) {
         case 'SAVE': {
           const { x, y, w, h } = captureLayer
@@ -109,27 +110,28 @@ export default defineComponent({
         }
         case 'CONFIRM': {
           const { x, y, w, h } = captureLayer
-          writeCanvasToClipboard(copyCanvas(canvasRef.value!, x, y, w, h)).then(
-            console.log,
-            console.warn,
-          )
+          writeCanvasToClipboard(copyCanvas(canvasRef.value!, x, y, w, h))
+            .then(console.log, console.warn)
           break
         }
         case 'RETURN': {
           if (actionHistory.length === 0) break
           actionHistory.pop()
-          updateCanvas(
-            actionHistory,
-            canvasRef.value!.getContext('2d')!,
-            imageSource,
-          )
+          updateCanvas(actionHistory)
           updateDrawBound()
+          break
+        }
+        case 'CANCEL': {
+          actionHistory.length = 1
+          handleExecCmd('RETURN')
+          Object.assign(captureLayer, { x: -999, y: -999, h: 0, w: 0 })
           break
         }
         default:
           console.log('TODO EXEC CMD => ', cmd)
-          break
+          return
       }
+      context.emit('dispatch', cmd)
     }
     function handleUpdateTool(tool: ActionType) {
       action.value = action.value === tool ? null : tool

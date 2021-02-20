@@ -1,4 +1,4 @@
-import { bound } from 'src/store'
+import { bound, canvasRef, imageSource } from 'src/store'
 import { ActionHistoryItem, Point } from 'src/type'
 
 /** PI/6 */
@@ -187,8 +187,8 @@ export const writeCanvasToClipboard = (canvas: HTMLCanvasElement) =>
 
 export function updateCanvas(
   actionHistory: Array<ActionHistoryItem>,
-  ctx: CanvasRenderingContext2D,
-  image: CanvasImageSource,
+  ctx: CanvasRenderingContext2D = canvasRef.value!.getContext('2d')!,
+  image: CanvasImageSource = imageSource,
 ) {
   ctx.clearRect(0, 0, bound.x.max, bound.y.max)
   ctx.drawImage(image, 0, 0)

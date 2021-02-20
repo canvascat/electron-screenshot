@@ -19,7 +19,7 @@
       <p>RGB({{ RGB }})</p>
     </info-box>
   </div>
-  <tool-box />
+  <tool-box @dispatch="handleToolCmd" />
 </template>
 
 <script lang="ts">
@@ -47,6 +47,7 @@ import InfoBox from './components/info-box.vue'
 import ToolBox from './components/tool-box.vue'
 import type {
   CaptureActionType,
+  CmdActionType,
   Point,
   ResizePoint,
   ResizePointPosition,
@@ -298,10 +299,25 @@ export default defineComponent({
       updateDrawBound()
     }
 
+    function initCapture() {
+      inited.value = false
+      once(wrapRef.value!, 'mousedown', <EventListener>startCapture)
+    }
+
+    function handleToolCmd(cmd: CmdActionType) {
+      switch (cmd) {
+        case 'CANCEL':
+          initCapture()
+          break
+        default:
+          break
+      }
+    }
+
     onMounted(() => {
       addResizeListener(document.body as any, updateBound)
-      once(wrapRef.value!, 'mousedown', <EventListener>startCapture)
-      document.body.appendChild(imageSource)
+      initCapture()
+      // document.body.appendChild(imageSource)
     })
     onUnmounted(() => {
       removeResizeListener(document.body as any, updateBound)
@@ -311,6 +327,7 @@ export default defineComponent({
       startCapture,
       onMousedownCaptureLayer,
       startResize,
+      handleToolCmd,
 
       captureLayerStyle,
       mousePoint,
