@@ -42,7 +42,7 @@ export default defineComponent({
     const { mousePoint, canvas } = toRefs(props)
     const canvasRef = ref(<Nullable<HTMLCanvasElement>>null)
     const style = computed(() => {
-      const style = <{ [key: string]: string }>{}
+      const style = <{ [key: string]: string; }>{}
       if (mousePoint.value) {
         const [x, y] = mousePoint.value
         const [w, h] = [OFFSET.X + SIZE, OFFSET.Y + SIZE]

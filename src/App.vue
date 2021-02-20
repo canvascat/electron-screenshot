@@ -1,14 +1,9 @@
 <template>
-  <div class="wrapper" ref="wrapRef">
+  <div ref="wrapRef" class="wrapper">
     <canvas ref="canvasRef" :width="bound.x.max" :height="bound.y.max"></canvas>
-    <div
-      class="capture-layer"
-      :style="captureLayerStyle"
-      @mousedown="onMousedownCaptureLayer"
-    >
+    <div class="capture-layer" :style="captureLayerStyle" @mousedown="onMousedownCaptureLayer">
       <i
         v-for="p in RESIZE_POINTS"
-        @mousedown.prevent="startResize($event, p)"
         :key="p.position.join()"
         :style="
           p.position.reduce((o, p) => Object.assign(o, { [p]: '-3px' }), {
@@ -16,18 +11,15 @@
           })
         "
         class="resize-point"
-      />
+        @mousedown.prevent="startResize($event, p)"
+      ></i>
     </div>
-    <info-box
-      :mousePoint="mousePoint"
-      :canvas="canvasRef"
-      v-if="infoBoxVisible"
-    >
+    <info-box v-if="infoBoxVisible" :mouse-point="mousePoint" :canvas="canvasRef">
       <p>{{ captureLayer.w }} x {{ captureLayer.h }}</p>
       <p>RGB({{ RGB }})</p>
     </info-box>
   </div>
-  <tool-box></tool-box>
+  <tool-box />
 </template>
 
 <script lang="ts">
@@ -39,7 +31,7 @@ import {
   onUnmounted,
   ref,
   watch,
-} from 'vue';
+} from 'vue'
 import {
   action,
   actionHistory,
@@ -50,27 +42,27 @@ import {
   imageSource,
   inited,
   updateDrawBound,
-} from 'src/store';
-import InfoBox from './components/info-box.vue';
-import ToolBox from './components/tool-box.vue';
+} from 'src/store'
+import InfoBox from './components/info-box.vue'
+import ToolBox from './components/tool-box.vue'
 import type {
   CaptureActionType,
   Point,
   ResizePoint,
   ResizePointPosition,
   ToolActionType,
-} from 'src/type';
+} from 'src/type'
 import {
   addResizeListener,
   createCSSRule,
   createStyleSheet,
   once,
   removeResizeListener,
-} from 'src/util/dom';
-import { pointDistance, rafThrottle } from 'src/util/util';
-import { cloneDeep, isEqual } from 'lodash';
-import { updateCanvas } from 'src/util/canvas';
-import { CAPTURE_ACTIONS, TOOL_ACTIONS } from './util/const';
+} from 'src/util/dom'
+import { rafThrottle } from 'src/util/util'
+import { cloneDeep, isEqual } from 'lodash'
+import { updateCanvas } from 'src/util/canvas'
+import { CAPTURE_ACTIONS, TOOL_ACTIONS } from './util/const'
 
 const RESIZE_POINTS: Array<ResizePoint> = [
   { position: ['top'], cursor: 'ns-resize' },
@@ -81,9 +73,7 @@ const RESIZE_POINTS: Array<ResizePoint> = [
   { position: ['bottom', 'right'], cursor: 'nwse-resize' },
   { position: ['top', 'right'], cursor: 'nesw-resize' },
   { position: ['bottom', 'left'], cursor: 'nesw-resize' },
-];
-
-const MIN_POINT_DISTANCE = 5;
+]
 
 export default defineComponent({
   name: 'App',
@@ -94,226 +84,228 @@ export default defineComponent({
   },
 
   setup() {
-    const wrapRef = ref(null as Nullable<HTMLDivElement>);
-    let cursorDownPoint: Nullable<Point> = null;
-    const mousePoint = ref(<Nullable<Point>>null);
-    const RGB = ref('0, 0, 0');
-    let cloneCaptureLayer = cloneDeep(captureLayer);
-    let resizeMode: Array<ResizePointPosition> = [];
-    let stylesheet: Nullable<HTMLStyleElement> = null;
+    const wrapRef = ref(null as Nullable<HTMLDivElement>)
+    let cursorDownPoint: Nullable<Point> = null
+    const mousePoint = ref(<Nullable<Point>>null)
+    const RGB = ref('0, 0, 0')
+    let cloneCaptureLayer = cloneDeep(captureLayer)
+    let resizeMode: Array<ResizePointPosition> = []
+    let stylesheet: Nullable<HTMLStyleElement> = null
     const infoBoxVisible = computed(
-      () => action.value && ['CREATE', 'RESIZE'].includes(action.value)
-    );
+      () => action.value && ['CREATE', 'RESIZE'].includes(action.value),
+    )
 
     // CSSStyleDeclaration
     const captureLayerStyle = computed(() => {
-      const { x, y, h, w } = captureLayer;
-      const [left, top, height, width] = [x, y, h, w].map((n) => `${n}px`);
-      const style = { left, top, height, width, cursor: '' };
-      if (!action.value) style.cursor = 'move';
-      return style;
-    });
+      const { x, y, h, w } = captureLayer
+      const [left, top, height, width] = [x, y, h, w].map(n => `${n}px`)
+      const style = { left, top, height, width, cursor: '' }
+      if (!action.value) style.cursor = 'move'
+      return style
+    })
 
-    const ctx = computed(() => canvasRef.value?.getContext('2d'));
+    const ctx = computed(() => canvasRef.value?.getContext('2d'))
 
     watch(
       mousePoint,
       rafThrottle((point: Point) => {
-        if (!ctx.value || !point) return;
-        const { data } = ctx.value.getImageData(point[0], point[1], 1, 1);
-        RGB.value = data.slice(0, 3).join(', ');
-      })
-    );
+        if (!ctx.value || !point) return
+        const { data } = ctx.value.getImageData(point[0], point[1], 1, 1)
+        RGB.value = data.slice(0, 3).join(', ')
+      }),
+    )
 
-    const updateBound = rafThrottle(async function () {
-      const { clientHeight, clientWidth } = document.body;
-      bound.x.max = clientWidth;
-      bound.y.max = clientHeight;
-      await nextTick();
-      updateCanvas(actionHistory, ctx.value!, imageSource);
-    });
+    const updateBound = rafThrottle(async function() {
+      const { clientHeight, clientWidth } = document.body
+      bound.x.max = clientWidth
+      bound.y.max = clientHeight
+      await nextTick()
+      updateCanvas(actionHistory, ctx.value!, imageSource)
+    })
 
     function startCapture(e: MouseEvent) {
-      inited.value = true;
-      const { x, y } = e;
-      Object.assign(captureLayer, { x, y });
-      action.value = 'CREATE';
+      inited.value = true
+      const { x, y } = e
+      Object.assign(captureLayer, { x, y })
+      action.value = 'CREATE'
       createCSSRule(
         '*',
         `cursor: crosshair !important;`,
-        (stylesheet = createStyleSheet())
-      );
-      startAction(e);
+        (stylesheet = createStyleSheet()),
+      )
+      startAction(e)
     }
 
     function startMove(e: MouseEvent) {
-      if (action.value) return;
-      action.value = 'MOVE';
+      if (action.value) return
+      action.value = 'MOVE'
       createCSSRule(
         '*',
         `cursor: move !important;`,
-        (stylesheet = createStyleSheet())
-      );
-      startAction(e);
+        (stylesheet = createStyleSheet()),
+      )
+      startAction(e)
     }
 
     function onMousedownCaptureLayer(e: MouseEvent) {
       if (!action.value) {
-        startMove(e);
+        startMove(e)
       } else if (TOOL_ACTIONS.includes(action.value)) {
         actionHistory.push({
           id: <ToolActionType>action.value,
           path: [[e.x, e.y]],
-        });
-        startAction(e);
+        })
+        startAction(e)
       }
     }
 
     function startResize(e: MouseEvent, { position, cursor }: ResizePoint) {
-      action.value = 'RESIZE';
-      resizeMode = position;
+      action.value = 'RESIZE'
+      resizeMode = position
       createCSSRule(
         '*',
         `cursor: ${cursor} !important;`,
-        (stylesheet = createStyleSheet())
-      );
-      startAction(e);
+        (stylesheet = createStyleSheet()),
+      )
+      startAction(e)
     }
 
     function startAction(e: MouseEvent) {
-      cloneCaptureLayer = cloneDeep(captureLayer);
-      e.stopImmediatePropagation();
-      const { x, y } = e;
-      cursorDownPoint = [x, y];
-      mousePoint.value = [x, y];
-      document.addEventListener('mousemove', onMousemoveDocument);
-      document.addEventListener('mouseup', onMouseupDocument);
-      document.onselectstart = () => false;
+      cloneCaptureLayer = cloneDeep(captureLayer)
+      e.stopImmediatePropagation()
+      const { x, y } = e
+      cursorDownPoint = [x, y]
+      mousePoint.value = [x, y]
+      document.addEventListener('mousemove', onMousemoveDocument)
+      document.addEventListener('mouseup', onMouseupDocument)
+      document.onselectstart = () => false
     }
 
     function onMousemoveDocument(e: MouseEvent) {
-      if (!cursorDownPoint || !action.value) return;
-      const [x0, y0] = cursorDownPoint;
-      let x1 = Math.min(Math.max(e.x, bound.x.min), bound.x.max);
-      let y1 = Math.min(Math.max(e.y, bound.y.min), bound.y.max);
-      const [dx, dy] = [x1 - x0, y1 - y0];
-      mousePoint.value = [x1, y1];
-      const [lastActionHistory] = actionHistory.slice(-1);
+      if (!cursorDownPoint || !action.value) return
+      const [x0, y0] = cursorDownPoint
+      let x1 = Math.min(Math.max(e.x, bound.x.min), bound.x.max)
+      let y1 = Math.min(Math.max(e.y, bound.y.min), bound.y.max)
+      const [dx, dy] = [x1 - x0, y1 - y0]
+      mousePoint.value = [x1, y1]
+      const [lastActionHistory] = actionHistory.slice(-1)
       if (CAPTURE_ACTIONS.includes(action.value)) {
         switch (<CaptureActionType>action.value) {
           case 'CREATE':
-            const [x, y] = [Math.min(x0, x1), Math.min(y0, y1)];
-            const [mw, mh] = [Math.abs(dx), Math.abs(dy)];
+            const [x, y] = [Math.min(x0, x1), Math.min(y0, y1)]
+            const [mw, mh] = [Math.abs(dx), Math.abs(dy)]
             const [w, h] = [
               Math.min(mw, bound.x.max - x),
               Math.min(mh, bound.y.max - y),
-            ];
-            Object.assign(captureLayer, { x, y, w, h });
-            break;
+            ]
+            Object.assign(captureLayer, { x, y, w, h })
+            break
           case 'MOVE': {
-            const { x: x2, y: y2 } = cloneCaptureLayer;
-            const { h, w } = captureLayer;
-            const db = drawBound.value;
+            const { x: x2, y: y2 } = cloneCaptureLayer
+            const { h, w } = captureLayer
+            const db = drawBound.value
             captureLayer.x = Math.min(
               Math.max(x2 + dx, bound.x.min, (db?.x.max ?? -Infinity) - w),
               bound.x.max - w,
-              db?.x.min ?? Infinity
-            );
+              db?.x.min ?? Infinity,
+            )
             captureLayer.y = Math.min(
               Math.max(y2 + dy, bound.y.min, (db?.y.max ?? -Infinity) - h),
               bound.y.max - h,
-              db?.y.min ?? Infinity
-            );
-            break;
+              db?.y.min ?? Infinity,
+            )
+            break
           }
           case 'RESIZE': {
-            const { h: h2, y: y2, w: w2, x: x2 } = cloneCaptureLayer;
-            const db = drawBound.value;
+            const { h: h2, y: y2, w: w2, x: x2 } = cloneCaptureLayer
+            const db = drawBound.value
             if (resizeMode.includes('top')) {
-              y1 = Math.min(y1, db?.y.min ?? Infinity);
-              captureLayer.y = Math.min(y1, y2 + h2);
-              captureLayer.h = Math.abs(y2 - y1 + h2);
+              y1 = Math.min(y1, db?.y.min ?? Infinity)
+              captureLayer.y = Math.min(y1, y2 + h2)
+              captureLayer.h = Math.abs(y2 - y1 + h2)
             } else if (resizeMode.includes('bottom')) {
-              y1 = Math.max(y1, db?.y.max ?? -Infinity);
-              captureLayer.y = Math.min(y1, y2);
-              captureLayer.h = Math.abs(y1 - y2);
+              y1 = Math.max(y1, db?.y.max ?? -Infinity)
+              captureLayer.y = Math.min(y1, y2)
+              captureLayer.h = Math.abs(y1 - y2)
             }
             if (resizeMode.includes('left')) {
-              x1 = Math.min(x1, db?.x.min ?? Infinity);
-              captureLayer.x = Math.min(x1, x2 + w2);
-              captureLayer.w = Math.abs(x2 - x1 + w2);
+              x1 = Math.min(x1, db?.x.min ?? Infinity)
+              captureLayer.x = Math.min(x1, x2 + w2)
+              captureLayer.w = Math.abs(x2 - x1 + w2)
             } else if (resizeMode.includes('right')) {
-              x1 = Math.max(x1, db?.x.max ?? -Infinity);
-              captureLayer.x = Math.min(x1, x2);
-              captureLayer.w = Math.abs(x1 - x2);
+              x1 = Math.max(x1, db?.x.max ?? -Infinity)
+              captureLayer.x = Math.min(x1, x2)
+              captureLayer.w = Math.abs(x1 - x2)
             }
-            break;
+            break
           }
           default:
-            break;
+            break
         }
       } else if (TOOL_ACTIONS.includes(action.value)) {
-        if (lastActionHistory?.id !== action.value) return;
-        const endPoint = pointBoundaryTreatment([x1, y1]);
-        const [lastEndPoint] = lastActionHistory.path!.slice(-1);
-        if (isEqual(endPoint, lastEndPoint)) return;
+        if (lastActionHistory?.id !== action.value) return
+        const endPoint = pointBoundaryTreatment([x1, y1])
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        const [lastEndPoint] = lastActionHistory.path!.slice(-1)
+        if (isEqual(endPoint, lastEndPoint)) return
         switch (<ToolActionType>action.value) {
           case 'LINE': {
-            lastActionHistory.path![1] = endPoint;
-            break;
+            lastActionHistory.path![1] = endPoint
+            break
           }
           case 'RECT': {
-            lastActionHistory.path![1] = endPoint;
-            break;
+            lastActionHistory.path![1] = endPoint
+            break
           }
           case 'ARROW': {
-            lastActionHistory.path![1] = endPoint;
-            break;
+            lastActionHistory.path![1] = endPoint
+            break
           }
           case 'ELLIPSE': {
-            lastActionHistory.path![1] = endPoint;
-            break;
+            lastActionHistory.path![1] = endPoint
+            break
           }
           case 'BRUSH': {
             // TODO
+            // const MIN_POINT_DISTANCE = 5;
             // if (pointDistance(endPoint, lastEndPoint) <= MIN_POINT_DISTANCE)
             //   break;
-            lastActionHistory.path!.push(endPoint);
-            break;
+            lastActionHistory.path!.push(endPoint)
+            break
           }
           default:
-            return;
+            return
         }
-        updateCanvas(actionHistory, ctx.value!, imageSource);
+        updateCanvas(actionHistory, ctx.value!, imageSource)
       }
     }
 
     function pointBoundaryTreatment([x0, y0]: Point): Point {
-      const { x, y, w, h } = captureLayer;
+      const { x, y, w, h } = captureLayer
       return [
         Math.max(Math.min(x0, x + w), x),
         Math.max(Math.min(y0, y + h), y),
-      ];
+      ]
     }
 
     function onMouseupDocument() {
-      cursorDownPoint = null;
-      document.onselectstart = null;
-      stylesheet?.parentNode?.removeChild(stylesheet);
-      document.removeEventListener('mousemove', onMousemoveDocument);
-      document.removeEventListener('mouseup', onMouseupDocument);
-      if (CAPTURE_ACTIONS.includes(action.value!)) action.value = null;
-      updateDrawBound();
+      cursorDownPoint = null
+      document.onselectstart = null
+      stylesheet?.parentNode?.removeChild(stylesheet)
+      document.removeEventListener('mousemove', onMousemoveDocument)
+      document.removeEventListener('mouseup', onMouseupDocument)
+      if (CAPTURE_ACTIONS.includes(action.value!)) action.value = null
+      updateDrawBound()
     }
 
     onMounted(() => {
-      addResizeListener(document.body as any, updateBound);
-      once(wrapRef.value!, 'mousedown', <EventListener>startCapture);
-      document.body.appendChild(imageSource);
-    });
+      addResizeListener(document.body as any, updateBound)
+      once(wrapRef.value!, 'mousedown', <EventListener>startCapture)
+      document.body.appendChild(imageSource)
+    })
     onUnmounted(() => {
-      removeResizeListener(document.body as any, updateBound);
-    });
+      removeResizeListener(document.body as any, updateBound)
+    })
 
     return {
       startCapture,
@@ -330,9 +322,9 @@ export default defineComponent({
 
       canvasRef,
       wrapRef,
-    };
+    }
   },
-});
+})
 </script>
 
 <style lang="scss">

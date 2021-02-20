@@ -94,7 +94,7 @@ function getSharedStyleSheet(): HTMLStyleElement {
 export function createStyleSheet(
   container: HTMLElement = document.getElementsByTagName('head')[0],
 ): HTMLStyleElement {
-  let style = document.createElement('style')
+  const style = document.createElement('style')
   // style.type = 'text/css';
   style.media = 'screen'
   container.appendChild(style)
@@ -119,7 +119,7 @@ export function loadImage(src: string) {
     ) => {
       const $img = new Image()
       $img.onload = () => resolve($img)
-      $img.onerror = (e) => reject(e)
+      $img.onerror = e => reject(e)
       $img.src = src
     },
   )

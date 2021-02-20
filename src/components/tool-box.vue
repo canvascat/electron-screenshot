@@ -1,20 +1,24 @@
 <template>
-  <div class="tool-box" ref="toolBoxRef" :style="style">
+  <div ref="toolBoxRef" class="tool-box" :style="style">
     <button
-      :class="['tool-item', action === t.id && 'active']"
       v-for="t in TOOL_ACTIONS"
       :key="t.id"
+      :class="['tool-item', action === t.id && 'active']"
       :title="t.label"
       @click="handleUpdateTool(t.id)"
-    >{{ t.icon }}</button>
+    >
+      {{ t.icon }}
+    </button>
     <div class="tool-divider"></div>
     <button
-      class="tool-item"
       v-for="t in OPT_ACTIONS"
       :key="t.id"
+      class="tool-item"
       :title="t.label"
       @click="handleExecCmd(t.id)"
-    >{{ t.icon }}</button>
+    >
+      {{ t.icon }}
+    </button>
   </div>
 </template>
 
@@ -28,16 +32,16 @@ import {
   imageSource,
   inited,
   updateDrawBound,
-} from 'src/store';
-import type { ActionType, CmdAction, ToolAction } from 'src/type';
+} from 'src/store'
+import type { ActionType, CmdAction, ToolAction } from 'src/type'
 import {
   copyCanvas,
   downloadCanvas,
   updateCanvas,
   writeCanvasToClipboard,
-} from 'src/util/canvas';
-import { addResizeListener, removeResizeListener } from 'src/util/dom';
-import { rafThrottle } from 'src/util/util';
+} from 'src/util/canvas'
+import { addResizeListener, removeResizeListener } from 'src/util/dom'
+import { rafThrottle } from 'src/util/util'
 import {
   computed,
   defineComponent,
@@ -45,9 +49,9 @@ import {
   onUnmounted,
   reactive,
   ref,
-} from 'vue';
+} from 'vue'
 
-const OFFSET = { X: 0, Y: 6 };
+const OFFSET = { X: 0, Y: 6 }
 
 const TOOL_ACTIONS: Array<ToolAction> = [
   { icon: 'A', label: '添加文字', id: 'TEXT' },
@@ -57,85 +61,85 @@ const TOOL_ACTIONS: Array<ToolAction> = [
   { icon: '↗', label: '箭头工具', id: 'ARROW' },
   { icon: '🖊', label: '笔刷工具', id: 'BRUSH' }, // 🐎🐴
   { icon: '🐴', label: '马赛克工具', id: 'MOSAIC' },
-];
+]
 
 const OPT_ACTIONS: Array<CmdAction> = [
   { icon: '↩', label: '撤销', id: 'RETURN' },
   { icon: '⬇', label: '保存(下载图片)', id: 'SAVE' },
   { icon: '❌', label: '取消', id: 'CANCEL' },
   { icon: '✔', label: '确定(复制到剪切板)', id: 'CONFIRM' },
-];
+]
 
 export default defineComponent({
   name: 'ToolBox',
 
   setup() {
-    const toolBoxRef = ref(<Nullable<HTMLDivElement>>null);
-    const clientRect = reactive({ w: 0, h: 0 });
+    const toolBoxRef = ref(<Nullable<HTMLDivElement>>null)
+    const clientRect = reactive({ w: 0, h: 0 })
     const style = computed(() => {
-      const style = <{ [key: string]: string }>{};
-      const visible = inited.value && action.value !== 'CREATE';
+      const style = <{ [key: string]: string; }>{}
+      const visible = inited.value && action.value !== 'CREATE'
       if (visible) {
-        const { x, y, w, h } = captureLayer;
+        const { x, y, w, h } = captureLayer
         const top =
           y + h + OFFSET.Y + clientRect.h + OFFSET.Y > bound.y.max
             ? Math.max(y - clientRect.h - OFFSET.Y, bound.y.min)
-            : y + h + OFFSET.Y;
+            : y + h + OFFSET.Y
         const left = Math.max(
           x + w - clientRect.w - OFFSET.X,
-          bound.x.min + OFFSET.X
-        );
-        style.left = `${left}px`;
-        style.top = `${top}px`;
+          bound.x.min + OFFSET.X,
+        )
+        style.left = `${left}px`
+        style.top = `${top}px`
       } else {
-        style.visibility = 'hidden';
+        style.visibility = 'hidden'
       }
-      return style;
-    });
+      return style
+    })
     const updateClientRect = rafThrottle(function() {
-      const { width: w, height: h } = toolBoxRef.value!.getBoundingClientRect();
-      Object.assign(clientRect, { w, h });
-    });
+      const { width: w, height: h } = toolBoxRef.value!.getBoundingClientRect()
+      Object.assign(clientRect, { w, h })
+    })
     function handleExecCmd(cmd: string) {
       switch (cmd) {
         case 'SAVE': {
-          const { x, y, w, h } = captureLayer;
-          downloadCanvas(canvasRef.value!, x, y, w, h);
-          break;
+          const { x, y, w, h } = captureLayer
+          downloadCanvas(canvasRef.value!, x, y, w, h)
+          break
         }
         case 'CONFIRM': {
-          const { x, y, w, h } = captureLayer;
+          const { x, y, w, h } = captureLayer
           writeCanvasToClipboard(copyCanvas(canvasRef.value!, x, y, w, h)).then(
             console.log,
-            console.warn
-          );
-          break;
+            console.warn,
+          )
+          break
         }
         case 'RETURN': {
-          if (actionHistory.length === 0) break;
-          actionHistory.pop();
+          if (actionHistory.length === 0) break
+          actionHistory.pop()
           updateCanvas(
             actionHistory,
             canvasRef.value!.getContext('2d')!,
-            imageSource
-          );
-          updateDrawBound();
-          break;
+            imageSource,
+          )
+          updateDrawBound()
+          break
         }
         default:
-          console.log('TODO EXEC CMD => ', cmd);
-          break;
+          console.log('TODO EXEC CMD => ', cmd)
+          break
       }
     }
     function handleUpdateTool(tool: ActionType) {
-      action.value = action.value === tool ? null : tool;
+      action.value = action.value === tool ? null : tool
     }
     onMounted(() => {
-      addResizeListener(toolBoxRef.value as any, updateClientRect);
-    });
+      addResizeListener(toolBoxRef.value as any, updateClientRect)
+    })
     onUnmounted(() => {
-      removeResizeListener(toolBoxRef.value as any, updateClientRect);
-    });
+      removeResizeListener(toolBoxRef.value as any, updateClientRect)
+    })
 
     return {
       TOOL_ACTIONS,
@@ -148,9 +152,9 @@ export default defineComponent({
       handleUpdateTool,
 
       toolBoxRef,
-    };
+    }
   },
-});
+})
 </script>
 
 <style lang="scss">

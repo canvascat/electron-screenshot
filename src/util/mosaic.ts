@@ -43,8 +43,8 @@ export default class Mosaic {
     const r = w / 2
     const cursor = encodeURIComponent(`<svg width="${w}" height="${w}" xmlns="http://www.w3.org/2000/svg">
       <circle cx="${r}" cy="${r}" r="${
-      r - 1
-    }" stroke="red" stroke-width="1" fill="none"/>
+  r - 1
+}" stroke="red" stroke-width="1" fill="none"/>
       </svg>`)
     console.log(w, `url(data:image/svg+xml;utf8,${cursor}) ${r} ${r}, auto;`)
     this.canvas.style.cursor = `url(data:image/svg+xml;utf8, ${cursor}) ${r} ${r}, auto`
@@ -119,7 +119,7 @@ export default class Mosaic {
     const [lastPoint] = this.points.slice(-1)
     if (
       isEqual(lastPoint, point) ||
-      this.points.find((xy) => isEqual(xy, point))
+      this.points.find(xy => isEqual(xy, point))
     )
       return
     this.points.push(point)
@@ -137,7 +137,7 @@ export default class Mosaic {
 
     // 复制一份进行计算
     const modifyImgData = this.ctx.getImageData(0, 0, width, height)
-    let modifyPxData = modifyImgData.data
+    const modifyPxData = modifyImgData.data
     const [x0, y0] = point
     for (
       let x1 = x0 - size * num, maxX1 = x0 + size * num + offSet;
@@ -152,7 +152,7 @@ export default class Mosaic {
         // (x1, y1) 为每个像素点的基准坐标
         // 计算出已 (x1, y1) 为基准坐标的马赛克块内的平均 RGB 值
         let [sumR, sumG, sumB] = [0, 0, 0]
-        let pixelIndexList = []
+        const pixelIndexList = []
         for (let x = x1, maxX = x1 + 2 * size; x < maxX; x++) {
           for (let y = y1, maxY = y1 + 2 * size; y < maxY; y++) {
             const pixelIndex = (y * width + x) * 4
@@ -237,7 +237,7 @@ export const drawImageToCanvas = (
       URL.revokeObjectURL(url)
       resolve(canvas)
     }
-    img.onerror = (event) => {
+    img.onerror = event => {
       reject(event)
       URL.revokeObjectURL(url)
     }

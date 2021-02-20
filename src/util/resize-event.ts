@@ -10,7 +10,7 @@ const resizeHandler = function (entries: ResizeObserverEntry[]) {
     const listeners =
       (entry.target as ResizableElement).__resizeListeners__ || []
     if (listeners.length) {
-      listeners.forEach((fn) => {
+      listeners.forEach(fn => {
         fn()
       })
     }

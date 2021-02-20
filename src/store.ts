@@ -22,8 +22,8 @@ export const drawBound = ref(<Nullable<Bound>>null)
 
 export function updateDrawBound (ah = actionHistory) {
   if (ah.length === 0) {
-    drawBound.value = null;
-    return;
+    drawBound.value = null
+    return
   }
   drawBound.value ??= {
     x: { min: 0, max: 0 },

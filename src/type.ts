@@ -33,8 +33,8 @@ export type Bound = {
 }
 
 export type Action = {
-  id: ActionType,
-  icon?: string,
+  id: ActionType
+  icon?: string
   label?: string
 }
 
@@ -51,12 +51,12 @@ export type CaptureAction = {
 } & Action
 
 export type ActionHistoryItem = {
-  id: ToolActionType,
-  path?: Array<Point>,
-  snapshoot?: string,
+  id: ToolActionType
+  path?: Array<Point>
+  snapshoot?: string
   // TODO
   attr?: {
-    color: string,
+    color: string
     width: number
   }
 }

@@ -1,6 +1,6 @@
-import { Point } from 'src/type'
+import type { Point } from 'src/type'
 
-export const sleep = (t = 0) => new Promise((resolve) => setTimeout(resolve, t))
+export const sleep = (t = 0) => new Promise(resolve => setTimeout(resolve, t))
 
 export type AnyFunction<T> = (...args: any[]) => T
 export function rafThrottle<T extends AnyFunction<any>>(
