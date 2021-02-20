@@ -9,7 +9,13 @@ export type CaptureLayer = {
   h: number
 }
 
-export type CaptureActionType = 'CREATE' | 'MOVE' | 'RESIZE' | 'TEXT' | 'RECT' | 'ELLIPSE' | 'LINE' | 'ARROW' | 'BRUSH' | 'MOSAIC'
+// /** 用于创建字符串列表映射至 `K: V` 的函数 */
+// const createStrEnum = <T extends string>(a: Array<T>): { [K in T]: K } => a.reduce((o, key) => (o[key] = key, o), Object.create(null));
+
+export type CaptureActionType = 'CREATE' | 'MOVE' | 'RESIZE'
+export type ToolActionType = 'TEXT' | 'RECT' | 'ELLIPSE' | 'LINE' | 'ARROW' | 'BRUSH' | 'MOSAIC'
+export type CmdActionType = 'RETURN' | 'SAVE' | 'CANCEL' | 'CONFIRM'
+export type ActionType = CaptureActionType | ToolActionType | CmdActionType
 
 export type ResizePointPosition = 'top' | 'right' | 'bottom' | 'left'
 export type ResizePoint = {
@@ -27,17 +33,25 @@ export type Bound = {
 }
 
 export type Action = {
-  id: string,
+  id: ActionType,
   icon?: string,
   label?: string
 }
 
 export type ToolAction = {
+  id: ToolActionType
+} & Action
+
+export type CmdAction = {
+  id: CmdActionType
+} & Action
+
+export type CaptureAction = {
   id: CaptureActionType
 } & Action
 
 export type ActionHistoryItem = {
-  id: CaptureActionType,
+  id: ToolActionType,
   path?: Array<Point>,
   snapshoot?: string,
   // TODO
