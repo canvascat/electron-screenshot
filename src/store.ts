@@ -1,5 +1,5 @@
 import { reactive, ref } from 'vue'
-import type { ActionHistoryItem, Bound, CaptureActionType, CaptureLayer, Point } from './type'
+import type { ActionHistoryItem, Bound, ActionType, CaptureLayer, Point } from './type'
 
 export const imageSource = new Image()
 
@@ -12,7 +12,7 @@ export const bound: Bound = reactive({
 
 export const captureLayer: CaptureLayer = reactive({ x: -999, y: -999, h: 0, w: 0 })
 
-export const action = ref(<Nullable<CaptureActionType>>null)
+export const action = ref(<Nullable<ActionType>>null)
 
 export const canvasRef = ref(null as Nullable<HTMLCanvasElement>)
 
