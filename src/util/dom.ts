@@ -111,16 +111,30 @@ export function createCSSRule(
   ;(<CSSStyleSheet>style.sheet).insertRule(selector + '{' + cssText + '}', 0)
 }
 
-export function loadImage(src: string) {
-  return new Promise(
+/** 加载图片 */
+export const loadImage = (src: string, img = new Image()) =>
+  new Promise(
     (
       resolve: (el: HTMLImageElement) => void,
       reject: (reason?: string | Event) => void,
     ) => {
-      const $img = new Image()
-      $img.onload = () => resolve($img)
-      $img.onerror = e => reject(e)
-      $img.src = src
+      img.onload = () => resolve(img)
+      img.onerror = e => reject(e)
+      img.src = src
     },
   )
-}
+
+/** 加载本地文件 */
+export const loadLocalFile = (accept = 'image/png') =>
+  new Promise((resolve: (file: File) => void, reject: () => void) => {
+    const input = document.createElement('input')
+    Object.assign(input, { accept, type: 'file' })
+    input.onchange = () => {
+      const file = input.files?.[0]
+      file?.type.startsWith('image/') ? resolve(file) : reject()
+    }
+    input.click()
+  })
+
+export const loadLocalImage = (img = new Image()) =>
+  loadLocalFile().then(file => loadImage(URL.createObjectURL(file), img))
