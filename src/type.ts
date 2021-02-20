@@ -14,7 +14,7 @@ export type CaptureLayer = {
 
 export type CaptureActionType = 'CREATE' | 'MOVE' | 'RESIZE'
 export type ToolActionType = 'TEXT' | 'RECT' | 'ELLIPSE' | 'LINE' | 'ARROW' | 'BRUSH' | 'MOSAIC'
-export type CmdActionType = 'RETURN' | 'SAVE' | 'CANCEL' | 'CONFIRM'
+export type CmdActionType = 'RETURN' | 'SAVE' | 'CANCEL' | 'CONFIRM' | 'UPLOAD'
 export type ActionType = CaptureActionType | ToolActionType | CmdActionType
 
 export type ResizePointPosition = 'top' | 'right' | 'bottom' | 'left'

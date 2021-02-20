@@ -29,21 +29,28 @@ import {
   bound,
   canvasRef,
   captureLayer,
+  imageSource,
   inited,
   updateDrawBound,
 } from 'src/store'
-import type { ActionType, CmdAction, CmdActionType, ToolAction } from 'src/type'
+import type {
+  ActionType,
+  CmdAction,
+  CmdActionType,
+  ToolAction,
+} from 'src/type'
 import {
   copyCanvas,
   downloadCanvas,
   updateCanvas,
   writeCanvasToClipboard,
 } from 'src/util/canvas'
-import { addResizeListener, removeResizeListener } from 'src/util/dom'
+import { addResizeListener, loadLocalImage, removeResizeListener } from 'src/util/dom'
 import { rafThrottle } from 'src/util/util'
 import {
   computed,
   defineComponent,
+  nextTick,
   onMounted,
   onUnmounted,
   reactive,
@@ -64,6 +71,7 @@ const TOOL_ACTIONS: Array<ToolAction> = [
 
 const OPT_ACTIONS: Array<CmdAction> = [
   { icon: '↩', label: '撤销', id: 'RETURN' },
+  { icon: '⚡', label: '更换底图', id: 'UPLOAD' },
   { icon: '⬇', label: '保存(下载图片)', id: 'SAVE' },
   { icon: '❌', label: '取消', id: 'CANCEL' },
   { icon: '✔', label: '确定(复制到剪切板)', id: 'CONFIRM' },
@@ -125,6 +133,15 @@ export default defineComponent({
           actionHistory.length = 1
           handleExecCmd('RETURN')
           Object.assign(captureLayer, { x: -999, y: -999, h: 0, w: 0 })
+          break
+        }
+        case 'UPLOAD': {
+          const oldSrc = imageSource.src
+          loadLocalImage(imageSource).then(() => {
+            actionHistory.length = 0
+            updateCanvas(actionHistory)
+            URL.revokeObjectURL(oldSrc)
+          })
           break
         }
         default:
