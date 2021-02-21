@@ -1,3 +1,5 @@
+import { getScreenCapture } from './util'
+
 export { addResizeListener, removeResizeListener } from './resize-event'
 
 const trim = function (s: string) {
@@ -138,3 +140,6 @@ export const loadLocalFile = (accept = 'image/png') =>
 
 export const loadLocalImage = (img = new Image()) =>
   loadLocalFile().then(file => loadImage(URL.createObjectURL(file), img))
+
+export const loadScreenCaptureImage = (img = new Image()) =>
+  getScreenCapture().then(file => loadImage(URL.createObjectURL(file), img))

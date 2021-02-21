@@ -45,7 +45,7 @@ import {
   updateCanvas,
   writeCanvasToClipboard,
 } from 'src/util/canvas'
-import { addResizeListener, loadLocalImage, removeResizeListener } from 'src/util/dom'
+import { addResizeListener, loadLocalImage, loadScreenCaptureImage, removeResizeListener } from 'src/util/dom'
 import { createNotification, rafThrottle } from 'src/util/util'
 import {
   computed,
@@ -59,18 +59,19 @@ import {
 const OFFSET = { X: 0, Y: 6 }
 
 const TOOL_ACTIONS: Array<ToolAction> = [
-  { icon: 'A', label: '添加文字', id: 'TEXT', cursor: 'text' },
+  { icon: 'A', label: '添加文字(TODO)', id: 'TEXT', cursor: 'text' },
   { icon: '⬜', label: '矩形工具', id: 'RECT' },
   { icon: '⚪', label: '椭圆工具', id: 'ELLIPSE' },
   { icon: '╱', label: '直线工具', id: 'LINE' },
   { icon: '↗', label: '箭头工具', id: 'ARROW' },
   { icon: '🖊', label: '笔刷工具', id: 'BRUSH' }, // 🐎🐴
-  { icon: '🐴', label: '马赛克工具', id: 'MOSAIC' },
+  { icon: '🐴', label: '马赛克工具(TODO)', id: 'MOSAIC' },
 ]
 
 const OPT_ACTIONS: Array<CmdAction> = [
   { icon: '↩', label: '撤销', id: 'RETURN' },
-  { icon: '⚡', label: '更换底图', id: 'UPLOAD' },
+  { icon: '⚡', label: '更换底图(使用本地文件)', id: 'USE_UPLOAD_FILE' },
+  { icon: '✂', label: '更换底图(使用屏幕快照)', id: 'USE_SCREEN_CAPTURE' },
   { icon: '⬇', label: '保存(下载图片)', id: 'SAVE' },
   { icon: '❌', label: '取消', id: 'CANCEL' },
   { icon: '✔', label: '确定(复制到剪切板)', id: 'CONFIRM' },
@@ -138,9 +139,18 @@ export default defineComponent({
           Object.assign(captureLayer, { x: -999, y: -999, h: 0, w: 0 })
           break
         }
-        case 'UPLOAD': {
+        case 'USE_UPLOAD_FILE': {
           const oldSrc = imageSource.src
           loadLocalImage(imageSource).then(() => {
+            actionHistory.length = 0
+            updateCanvas(actionHistory)
+            URL.revokeObjectURL(oldSrc)
+          })
+          break
+        }
+        case 'USE_SCREEN_CAPTURE': {
+          const oldSrc = imageSource.src
+          loadScreenCaptureImage(imageSource).then(() => {
             actionHistory.length = 0
             updateCanvas(actionHistory)
             URL.revokeObjectURL(oldSrc)
