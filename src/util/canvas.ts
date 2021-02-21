@@ -1,4 +1,5 @@
-import { bound, canvasRef, imageSource } from 'src/store'
+import { findLast, isEqual } from 'lodash'
+import { bound, canvasRef, imageSource, mosaicOriginalPxData } from 'src/store'
 import { ActionHistoryItem, Point } from 'src/type'
 
 /** PI/6 */
@@ -130,6 +131,88 @@ export function drawCurve(
   ctx.closePath()
 }
 
+function normalizePath(path: Array<Point>, size: number, brushWidth: number) {
+  const offSet = brushWidth - ~~(brushWidth / size / 2) * size * 2
+  return path.reduce((np, [x0, y0]) => {
+    x0 = +Math.round((x0 - offSet) / size / 2) * size * 2
+    y0 = +Math.round((y0 - offSet) / size / 2) * size * 2
+    const normalizePoint: Point = [x0, y0]
+    if (!findLast(np, p => isEqual(p, normalizePoint))) np.push(normalizePoint)
+    return np
+  }, <Array<Point>>[])
+}
+
+/**
+ * 绘制马赛克
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {Array<Point>} path 笔触路径
+ * @param {number} [size=6] 马赛克大小
+ * @param {number} [brushWidth=30] 画笔宽度
+ */
+export function drawMosaic(
+  ctx: CanvasRenderingContext2D,
+  path: Array<Point>,
+  size = 6,
+  brushWidth = 30,
+  data = mosaicOriginalPxData.value!,
+) {
+  const { height, width } = ctx.canvas
+  /** 原始图片像素数据 */
+  // data ??= ctx.getImageData(0, 0, width, height).data
+  /** 拷贝一份数据用来修改 */
+  const modifyImgData = ctx.getImageData(0, 0, width, height)
+  const modifyPxData = modifyImgData.data
+  const num = ~~(brushWidth / size / 2)
+  const offSet = brushWidth - num * size * 2
+  normalizePath(path, size, brushWidth).forEach(([x0, y0]) => {
+    for (
+      let x1 = x0 - size * num, maxX1 = x0 + size * num + offSet;
+      x1 < maxX1;
+      x1 += 2 * size
+    ) {
+      for (
+        let y1 = y0 - size * num, maxY1 = y0 + size * num + offSet;
+        y1 < maxY1;
+        y1 += 2 * size
+      ) {
+        // (x1, y1) 为每个像素点的基准坐标
+        // 计算出已 (x1, y1) 为基准坐标的马赛克块内的平均 RGB 值
+        let [sumR, sumG, sumB] = [0, 0, 0]
+        const pixelIndexList = []
+        for (let x = x1, maxX = x1 + 2 * size; x < maxX; x++) {
+          for (let y = y1, maxY = y1 + 2 * size; y < maxY; y++) {
+            const pixelIndex = (y * width + x) * 4
+            // 圆形边界判断条件，可以让笔触边缘为圆角，之后只给圆内的像素点调整颜色
+            if (
+              (y - y0 + offSet / 2) ** 2 + (x - x0 + offSet / 2) ** 2 <=
+              (brushWidth / 2) ** 2
+            ) {
+              pixelIndexList.push(pixelIndex)
+            }
+            sumR += data[pixelIndex]
+            sumG += data[pixelIndex + 1]
+            sumB += data[pixelIndex + 2]
+          }
+        }
+        const pixelTotlal = (2 * size) ** 2 // pixelIndexList.length // 单个马赛克的像素点数量
+        const [avgR, avgG, avgB] = [
+          sumR / pixelTotlal,
+          sumG / pixelTotlal,
+          sumB / pixelTotlal,
+        ]
+
+        for (let x = 0; x < pixelIndexList.length; x++) {
+          const pixelIndex = pixelIndexList[x]
+          modifyPxData[pixelIndex] = avgR
+          modifyPxData[pixelIndex + 1] = avgG
+          modifyPxData[pixelIndex + 2] = avgB
+        }
+      }
+    }
+  })
+  ctx.putImageData(modifyImgData, 0, 0, 0, 0, width, height)
+}
+
 export const canvasToBlob = (canvas: HTMLCanvasElement) =>
   new Promise((resolve: (file: Blob) => void, reject: (err: Error) => void) =>
     canvas.toBlob(file =>
@@ -179,7 +262,7 @@ export const writeCanvasToClipboard = (canvas: HTMLCanvasElement) =>
         // const file = new File([blob], name, { type })
         // const data = new DataTransfer();
         // data.items.add(file)
-        // return navigator.clipboard.writeText('dasd').then(() => 'success', () => 'failure')
+        // return navigator.clipboard.write(data).then(() => 'success', () => 'failure')
         // https://stackoverflow.com/questions/58312058/navigator-clipboard-write-clipboard-iterator-getter-is-not-callable
         // https://stackoverflow.com/questions/57278923/chrome-76-copy-content-to-clipboard-using-navigator
         return navigator.clipboard.write([new ClipboardItem({ [type]: blob })])
@@ -218,6 +301,9 @@ export function updateCanvas(
       case 'BRUSH':
         // TODO 当path.length较长，绘制会出现卡顿，使用snapshoot
         drawCurve(ctx, item.path!, 4, 'red')
+        break
+      case 'MOSAIC':
+        drawMosaic(ctx, item.path!)
         break
       default:
         break

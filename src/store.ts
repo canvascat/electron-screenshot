@@ -37,3 +37,6 @@ export function updateDrawBound (ah = actionHistory) {
   drawBound.value.y.max = Math.max(...yps)
   console.log(drawBound.value)
 }
+
+/** 绘制马赛克的图片原始像素数据 */
+export const mosaicOriginalPxData = ref(<Nullable<Uint8ClampedArray>>null)

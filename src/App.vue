@@ -2,7 +2,7 @@
   <div ref="wrapRef" class="wrapper">
     <canvas ref="canvasRef" :width="bound.x.max" :height="bound.y.max"></canvas>
     <div class="capture-layer" :style="captureLayerStyle" @mousedown="onMousedownCaptureLayer">
-      <i
+      <button
         v-for="p in RESIZE_POINTS"
         :key="p.position.join()"
         :style="
@@ -12,7 +12,8 @@
         "
         class="resize-point"
         @mousedown.prevent="startResize($event, p)"
-      ></i>
+      >
+      </button>
     </div>
     <info-box v-if="infoBoxVisible" :mouse-point="mousePoint" :canvas="canvasRef">
       <p>{{ captureLayer.w }} x {{ captureLayer.h }}</p>
@@ -41,6 +42,7 @@ import {
   drawBound,
   imageSource,
   inited,
+  mosaicOriginalPxData,
   updateDrawBound,
 } from 'src/store'
 import InfoBox from './components/info-box.vue'
@@ -156,6 +158,12 @@ export default defineComponent({
           id: <ToolActionType>action.value,
           path: [[e.x, e.y]],
         })
+        if (action.value === 'MOSAIC') {
+          const { height, width } = ctx.value!.canvas
+          mosaicOriginalPxData.value = ctx.value!.getImageData(0, 0, width, height).data
+          console.log(mosaicOriginalPxData.value)
+          console.log(height, width)
+        }
         startAction(e)
       }
     }
@@ -274,6 +282,10 @@ export default defineComponent({
             lastActionHistory.path!.push(endPoint)
             break
           }
+          case 'MOSAIC': {
+            lastActionHistory.path!.push(endPoint)
+            break
+          }
           default:
             return
         }
@@ -295,6 +307,9 @@ export default defineComponent({
       stylesheet?.parentNode?.removeChild(stylesheet)
       document.removeEventListener('mousemove', onMousemoveDocument)
       document.removeEventListener('mouseup', onMouseupDocument)
+      if (action.value === 'MOSAIC') {
+        mosaicOriginalPxData.value = null
+      }
       if (CAPTURE_ACTIONS.includes(action.value!)) action.value = null
       updateDrawBound()
     }
@@ -395,6 +410,13 @@ body > img {
   position: absolute;
   width: 7px;
   height: 7px;
+  padding: 0;
+  border: 0;
+  box-sizing: border-box;
   background-color: skyblue;
+  border-radius: 0;
+  &:focus {
+    background-color: brown;
+  }
 }
 </style>
