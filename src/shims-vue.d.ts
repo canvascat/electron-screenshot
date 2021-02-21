@@ -20,3 +20,8 @@ declare var ClipboardItem: {
 interface Clipboard {
   write(dataTransfer: DataTransfer | Array<ClipboardItem>): Promise<void>
 }
+
+interface MediaDevices {
+  // https://www.w3.org/TR/2021/WD-screen-capture-20210205/
+  getDisplayMedia (): Promise<MediaStream>
+}
