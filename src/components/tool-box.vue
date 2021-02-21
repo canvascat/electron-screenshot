@@ -46,11 +46,10 @@ import {
   writeCanvasToClipboard,
 } from 'src/util/canvas'
 import { addResizeListener, loadLocalImage, removeResizeListener } from 'src/util/dom'
-import { rafThrottle } from 'src/util/util'
+import { createNotification, rafThrottle } from 'src/util/util'
 import {
   computed,
   defineComponent,
-  nextTick,
   onMounted,
   onUnmounted,
   reactive,
@@ -60,7 +59,7 @@ import {
 const OFFSET = { X: 0, Y: 6 }
 
 const TOOL_ACTIONS: Array<ToolAction> = [
-  { icon: 'A', label: '添加文字', id: 'TEXT' },
+  { icon: 'A', label: '添加文字', id: 'TEXT', cursor: 'text' },
   { icon: '⬜', label: '矩形工具', id: 'RECT' },
   { icon: '⚪', label: '椭圆工具', id: 'ELLIPSE' },
   { icon: '╱', label: '直线工具', id: 'LINE' },
@@ -119,7 +118,11 @@ export default defineComponent({
         case 'CONFIRM': {
           const { x, y, w, h } = captureLayer
           writeCanvasToClipboard(copyCanvas(canvasRef.value!, x, y, w, h))
-            .then(console.log, console.warn)
+            .then(() => {
+              createNotification({ body: '图片已复制' }, '提示')
+            }, err => {
+              createNotification({ body: err?.message ?? '图片复制失败' }, '提示')
+            })
           break
         }
         case 'RETURN': {
