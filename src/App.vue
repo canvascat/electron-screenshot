@@ -371,6 +371,15 @@ body > img {
     position: absolute;
     top: 0;
     left: 0;
+    background: #eee;
+    background-image:
+      linear-gradient(45deg, #bbb 25%, transparent 0),
+      linear-gradient(45deg, transparent 75%, #bbb 0),
+      linear-gradient(45deg, #bbb 25%, transparent 0),
+      linear-gradient(45deg, transparent 75%, #bbb 0);
+    background-position: 0 0, 15px 15px,
+                         15px 15px, 30px 30px;
+    background-size: 30px 30px;
   }
 }
 .capture-layer {
