@@ -105,31 +105,32 @@ export function drawEllipse(
 
 export function drawCurve(
   ctx: CanvasRenderingContext2D,
-  paths: Array<Point>,
+  path: Array<Point>,
   lineWidth: number,
   strokeStyle: CanvasFillStrokeStyles['strokeStyle'],
 ) {
-  if (paths.length < 2) return
+  if (path.length < 2) return
   ctx.lineWidth = lineWidth
   ctx.strokeStyle = strokeStyle
   ctx.lineCap = 'round'
   ctx.beginPath()
-  let startPoint = paths[0]
+  let startPoint = path[0]
   ctx.moveTo(...startPoint)
-  for (let i = 1; i < paths.length - 1; i++) {
+  path.slice(1).forEach(point => ctx.lineTo(...point))
+  for (let i = 1; i < path.length - 1; i++) {
     /** controlPoint, nextPoint */
-    const [[cx, cy], [nx, ny]] = paths.slice(i, i + 2)
+    const [[cx, cy], [nx, ny]] = path.slice(i, i + 2)
     /** endPoint */
     const [ex, ey] = [cx + (nx - cx) / 2, cy + (ny - cy) / 2]
     ctx.quadraticCurveTo(cx, cy, ex, ey)
     startPoint = [ex, ey]
   }
-  ctx.lineTo(...paths.slice(-1)[0])
+  ctx.lineTo(...path.slice(-1)[0])
   ctx.stroke()
   ctx.closePath()
 }
 
-const canvasToBlob = (canvas: HTMLCanvasElement) =>
+export const canvasToBlob = (canvas: HTMLCanvasElement) =>
   new Promise((resolve: (file: Blob) => void, reject: (err: Error) => void) =>
     canvas.toBlob(file =>
       file ? resolve(file) : reject(new Error('Failed to convert file')),
