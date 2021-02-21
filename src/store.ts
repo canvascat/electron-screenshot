@@ -1,4 +1,4 @@
-import { reactive, ref } from 'vue'
+import { reactive, ref, shallowReactive } from 'vue'
 import type { ActionHistoryItem, Bound, ActionType, CaptureLayer, Point } from './type'
 
 export const imageSource = new Image()
@@ -16,7 +16,7 @@ export const action = ref(<Nullable<ActionType>>null)
 
 export const canvasRef = ref(null as Nullable<HTMLCanvasElement>)
 
-export const actionHistory = reactive(<Array<ActionHistoryItem>>[])
+export const actionHistory = shallowReactive(<Array<ActionHistoryItem>>[])
 
 export const drawBound = ref(<Nullable<Bound>>null)
 
