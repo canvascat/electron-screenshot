@@ -1,4 +1,3 @@
-import { findLast, isEqual } from 'lodash'
 import { bound, canvasRef, imageSource, mosaicOriginalPxData } from 'src/store'
 import { ActionHistoryItem, Point } from 'src/type'
 
@@ -117,7 +116,6 @@ export function drawCurve(
   ctx.beginPath()
   let startPoint = path[0]
   ctx.moveTo(...startPoint)
-  path.slice(1).forEach(point => ctx.lineTo(...point))
   for (let i = 1; i < path.length - 1; i++) {
     /** controlPoint, nextPoint */
     const [[cx, cy], [nx, ny]] = path.slice(i, i + 2)
@@ -131,86 +129,80 @@ export function drawCurve(
   ctx.closePath()
 }
 
-function normalizePath(path: Array<Point>, size: number, brushWidth: number) {
-  const offSet = brushWidth - ~~(brushWidth / size / 2) * size * 2
-  return path.reduce((np, [x0, y0]) => {
-    x0 = +Math.round((x0 - offSet) / size / 2) * size * 2
-    y0 = +Math.round((y0 - offSet) / size / 2) * size * 2
-    const normalizePoint: Point = [x0, y0]
-    if (!findLast(np, p => isEqual(p, normalizePoint))) np.push(normalizePoint)
-    return np
-  }, <Array<Point>>[])
+export function createMosaicData(ctx: CanvasRenderingContext2D, size = 10) {
+  const { width, height } = ctx.canvas
+  const [wl, hl] = [Math.ceil(width / size), Math.ceil(height / size)]
+  const data = ctx.getImageData(0, 0, width, height).data
+  const md = new Uint8ClampedArray(wl * hl * 4)
+  for (let i = 0; i < wl * hl; i++) {
+    const sy = Math.floor(i / wl)
+    const sx = i - sy * wl
+    let [sumR, sumG, sumB, total] = [0, 0, 0, 0]
+    for (let y = sy * size; y < Math.min((sy + 1) * size, height); y++) {
+      const stratY = y * width
+      for (let x = sx * size; x < Math.min((sx + 1) * size, width); x++) {
+        const sIndex = (stratY + x) * 4
+        sumR += data[sIndex], sumG += data[sIndex + 1], sumB += data[sIndex + 2], total++
+      }
+    }
+    [md[i * 4], md[i * 4 + 1], md[i * 4 + 2], md[i * 4 + 3]] = [sumR / total, sumG / total, sumB / total, 255]
+  }
+  return md
 }
 
-/**
- * 绘制马赛克
- * @param {CanvasRenderingContext2D} ctx
- * @param {Array<Point>} path 笔触路径
- * @param {number} [size=6] 马赛克大小
- * @param {number} [brushWidth=30] 画笔宽度
- */
-export function drawMosaic(
-  ctx: CanvasRenderingContext2D,
-  path: Array<Point>,
-  size = 6,
-  brushWidth = 30,
-  data = mosaicOriginalPxData.value!,
-) {
-  const { height, width } = ctx.canvas
-  /** 原始图片像素数据 */
-  // data ??= ctx.getImageData(0, 0, width, height).data
-  /** 拷贝一份数据用来修改 */
-  const modifyImgData = ctx.getImageData(0, 0, width, height)
-  const modifyPxData = modifyImgData.data
-  const num = ~~(brushWidth / size / 2)
-  const offSet = brushWidth - num * size * 2
-  normalizePath(path, size, brushWidth).forEach(([x0, y0]) => {
-    for (
-      let x1 = x0 - size * num, maxX1 = x0 + size * num + offSet;
-      x1 < maxX1;
-      x1 += 2 * size
-    ) {
-      for (
-        let y1 = y0 - size * num, maxY1 = y0 + size * num + offSet;
-        y1 < maxY1;
-        y1 += 2 * size
-      ) {
-        // (x1, y1) 为每个像素点的基准坐标
-        // 计算出已 (x1, y1) 为基准坐标的马赛克块内的平均 RGB 值
-        let [sumR, sumG, sumB] = [0, 0, 0]
-        const pixelIndexList = []
-        for (let x = x1, maxX = x1 + 2 * size; x < maxX; x++) {
-          for (let y = y1, maxY = y1 + 2 * size; y < maxY; y++) {
-            const pixelIndex = (y * width + x) * 4
-            // 圆形边界判断条件，可以让笔触边缘为圆角，之后只给圆内的像素点调整颜色
-            if (
-              (y - y0 + offSet / 2) ** 2 + (x - x0 + offSet / 2) ** 2 <=
-              (brushWidth / 2) ** 2
-            ) {
-              pixelIndexList.push(pixelIndex)
-            }
-            sumR += data[pixelIndex]
-            sumG += data[pixelIndex + 1]
-            sumB += data[pixelIndex + 2]
-          }
-        }
-        const pixelTotlal = (2 * size) ** 2 // pixelIndexList.length // 单个马赛克的像素点数量
-        const [avgR, avgG, avgB] = [
-          sumR / pixelTotlal,
-          sumG / pixelTotlal,
-          sumB / pixelTotlal,
-        ]
-
-        for (let x = 0; x < pixelIndexList.length; x++) {
-          const pixelIndex = pixelIndexList[x]
-          modifyPxData[pixelIndex] = avgR
-          modifyPxData[pixelIndex + 1] = avgG
-          modifyPxData[pixelIndex + 2] = avgB
+/** 生成绘制马赛克区域的信息 */
+const createDrawMosaicLayerData = (width: number, height: number, path: Array<Point>, r: number) =>
+  path.reduce((data, [x0, y0]) => {
+    const [startX, endX] = [Math.max(0, x0 - r), Math.min(x0 + r, width)]
+    const [startY, endY] = [Math.max(0, y0 - r), Math.min(y0 + r, height)]
+    for (let y = startY; y < endY; y++) {
+      for (let x = startX; x < endX; x++) {
+        if ((x - x0) ** 2 + (y - y0) ** 2 < r ** 2) {
+          data[y * width + x] = true
         }
       }
     }
-  })
-  ctx.putImageData(modifyImgData, 0, 0, 0, 0, width, height)
+    return data
+  }, <Array<boolean>>Array(width * height).fill(false))
+
+export function drawMosaic(
+  ctx: CanvasRenderingContext2D,
+  path: Array<Point>,
+  size = 10,
+  brushWidth = 30,
+  data: Uint8ClampedArray,
+) {
+  const { height, width } = ctx.canvas
+  const drawData = createDrawMosaicLayerData(width, height, path, brushWidth / 2)
+  const [wl, hl] = [Math.ceil(width / size), Math.ceil(height / size)]
+  const originalData = ctx.getImageData(0, 0, width, height).data
+  const newData = new Uint8ClampedArray(width * height * 4)
+  for (let y = 0; y < hl; y++) {
+    const [startY, endY] = [y * size, Math.min((y + 1) * size, height)]
+    for (let x = 0; x < wl; x++) {
+      const [startX, endX] = [x * size, Math.min((x + 1) * size, width)]
+      const index = (y * wl + x) * 4
+      const [R, G, B, A] = [data[index], data[index + 1], data[index + 2], 255]
+      for (let y0 = startY; y0 < endY; y0++) {
+        for (let x0 = startX; x0 < endX; x0++) {
+          const dIndex = y0 * width + x0
+          const nIndex = dIndex * 4
+          if (drawData[dIndex]) {
+            newData[nIndex] = R
+            newData[nIndex + 1] = G
+            newData[nIndex + 2] = B
+            newData[nIndex + 3] = A
+          } else {
+            newData[nIndex] = originalData[nIndex]
+            newData[nIndex + 1] = originalData[nIndex + 1]
+            newData[nIndex + 2] = originalData[nIndex + 2]
+            newData[nIndex + 3] = originalData[nIndex + 3]
+          }
+        }
+      }
+    }
+  }
+  ctx.putImageData(new ImageData(newData, width, height), 0, 0)
 }
 
 export const canvasToBlob = (canvas: HTMLCanvasElement) =>
@@ -298,12 +290,12 @@ export function updateCanvas(
         drawEllipse(ctx, startPoint, endPoint, 1, 'red')
         break
       }
+      // TODO: 当path.length较长，绘制会出现卡顿，使用snapshoot
       case 'BRUSH':
-        // TODO 当path.length较长，绘制会出现卡顿，使用snapshoot
         drawCurve(ctx, item.path!, 4, 'red')
         break
       case 'MOSAIC':
-        drawMosaic(ctx, item.path!)
+        drawMosaic(ctx, item.path!, 10, 30, mosaicOriginalPxData.value!)
         break
       default:
         break
