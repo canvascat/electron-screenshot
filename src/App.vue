@@ -64,7 +64,7 @@ import {
 } from 'src/util/dom'
 import { rafThrottle } from 'src/util/util'
 import { cloneDeep, isEqual } from 'lodash'
-import { updateCanvas } from 'src/util/canvas'
+import { createMosaicData, updateCanvas } from 'src/util/canvas'
 import { CAPTURE_ACTIONS, TOOL_ACTIONS } from './util/const'
 
 const RESIZE_POINTS: Array<ResizePoint> = [
@@ -159,10 +159,7 @@ export default defineComponent({
           path: [[e.x, e.y]],
         })
         if (action.value === 'MOSAIC') {
-          const { height, width } = ctx.value!.canvas
-          mosaicOriginalPxData.value = ctx.value!.getImageData(0, 0, width, height).data
-          console.log(mosaicOriginalPxData.value)
-          console.log(height, width)
+          mosaicOriginalPxData.value = createMosaicData(ctx.value!, 10)
         }
         startAction(e)
       }
@@ -179,13 +176,15 @@ export default defineComponent({
       startAction(e)
     }
 
+    const throttledOnMousemoveDocument = <(e: MouseEvent) => void>rafThrottle(onMousemoveDocument)
+
     function startAction(e: MouseEvent) {
       cloneCaptureLayer = cloneDeep(captureLayer)
       e.stopImmediatePropagation()
       const { x, y } = e
       cursorDownPoint = [x, y]
       mousePoint.value = [x, y]
-      document.addEventListener('mousemove', onMousemoveDocument)
+      document.addEventListener('mousemove', throttledOnMousemoveDocument)
       document.addEventListener('mouseup', onMouseupDocument)
       document.onselectstart = () => false
     }
@@ -305,7 +304,7 @@ export default defineComponent({
       cursorDownPoint = null
       document.onselectstart = null
       stylesheet?.parentNode?.removeChild(stylesheet)
-      document.removeEventListener('mousemove', onMousemoveDocument)
+      document.removeEventListener('mousemove', throttledOnMousemoveDocument)
       document.removeEventListener('mouseup', onMouseupDocument)
       if (action.value === 'MOSAIC') {
         mosaicOriginalPxData.value = null
