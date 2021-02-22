@@ -34,10 +34,10 @@ import {
   updateDrawBound,
 } from 'src/store'
 import type {
-  ActionType,
   CmdAction,
   CmdActionType,
   ToolAction,
+  ToolActionType,
 } from 'src/type'
 import {
   copyCanvas,
@@ -163,7 +163,7 @@ export default defineComponent({
       }
       context.emit('dispatch', cmd)
     }
-    function handleUpdateTool(tool: ActionType) {
+    function handleUpdateTool(tool: ToolActionType) {
       action.value = action.value === tool ? null : tool
     }
     onMounted(() => {
