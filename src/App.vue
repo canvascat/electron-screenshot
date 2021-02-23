@@ -1,7 +1,7 @@
 <template>
   <div ref="wrapRef" class="wrapper">
     <canvas ref="canvasRef" :width="bound.x.max" :height="bound.y.max"></canvas>
-    <div class="capture-layer" :style="captureLayerStyle" @mousedown="onMousedownCaptureLayer">
+    <div class="capture-layer" :style="captureLayerStyle" @mousedown.left="onMousedownCaptureLayer">
       <button
         v-for="p in RESIZE_POINTS"
         :key="p.position.join()"
@@ -11,7 +11,7 @@
           })
         "
         class="resize-point"
-        @mousedown.prevent="startResize($event, p)"
+        @mousedown.left.prevent="startResize($event, p)"
       >
       </button>
     </div>
@@ -127,6 +127,7 @@ export default defineComponent({
     })
 
     function startCapture(e: MouseEvent) {
+      if (e.button !== 0) return initCapture()
       inited.value = true
       const { x, y } = e
       Object.assign(captureLayer, { x, y })
