@@ -20,13 +20,22 @@
       {{ t.icon }}
     </button>
   </div>
+  <StyleBox
+    v-if="styleBoxVisibility"
+    v-model:color="brushColor"
+    v-model:width="brushWidth"
+    :reference="toolBoxRef"
+  />
 </template>
 
 <script lang="ts">
+import StyleBox from './style-box.vue'
 import {
   action,
   actionHistory,
   bound,
+  brushColor,
+  brushWidth,
   canvasRef,
   captureLayer,
   imageSource,
@@ -80,6 +89,8 @@ const OPT_ACTIONS: Array<CmdAction> = [
 export default defineComponent({
   name: 'ToolBox',
 
+  components: { StyleBox },
+
   emits: ['dispatch'],
 
   setup(props, context) {
@@ -105,6 +116,8 @@ export default defineComponent({
       }
       return style
     })
+    const SHOW_STYLE_BOX_TOOL_IDS = ['LINE','RECT', 'ARROW', 'ELLIPSE']
+    const styleBoxVisibility = computed(() => action.value && SHOW_STYLE_BOX_TOOL_IDS.includes(action.value))
     const updateClientRect = rafThrottle(function() {
       const { width: w, height: h } = toolBoxRef.value!.getBoundingClientRect()
       Object.assign(clientRect, { w, h })
@@ -179,6 +192,9 @@ export default defineComponent({
 
       style,
       action,
+      styleBoxVisibility,
+      brushColor,
+      brushWidth,
 
       handleExecCmd,
       handleUpdateTool,

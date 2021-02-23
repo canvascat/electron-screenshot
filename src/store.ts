@@ -1,5 +1,6 @@
 import { reactive, ref, shallowReactive } from 'vue'
 import type { ActionHistoryItem, Bound, ActionType, CaptureLayer, Point } from './type'
+import { DEFAULT_COLOR, DEFAULT_WIDTH } from './util/const'
 
 export const imageSource = new Image()
 
@@ -40,3 +41,7 @@ export function updateDrawBound (ah = actionHistory) {
 
 /** 绘制马赛克的图片原始像素数据 */
 export const mosaicOriginalPxData = ref(<Nullable<Uint8ClampedArray>>null)
+
+export const brushColor = ref(DEFAULT_COLOR)
+
+export const brushWidth = ref(DEFAULT_WIDTH)

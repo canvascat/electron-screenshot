@@ -37,6 +37,8 @@ import {
   action,
   actionHistory,
   bound,
+  brushColor,
+  brushWidth,
   canvasRef,
   captureLayer,
   drawBound,
@@ -65,7 +67,7 @@ import {
 import { rafThrottle } from 'src/util/util'
 import { cloneDeep, isEqual } from 'lodash'
 import { createMosaicData, updateCanvas } from 'src/util/canvas'
-import { CAPTURE_ACTIONS, TOOL_ACTIONS } from './util/const'
+import { CAPTURE_ACTION_IDS, TOOL_ACTION_IDS } from './util/const'
 
 const RESIZE_POINTS: Array<ResizePoint> = [
   { position: ['top'], cursor: 'ns-resize' },
@@ -154,10 +156,14 @@ export default defineComponent({
     function onMousedownCaptureLayer(e: MouseEvent) {
       if (!action.value) {
         startMove(e)
-      } else if (TOOL_ACTIONS.includes(action.value)) {
+      } else if (TOOL_ACTION_IDS.includes(action.value)) {
         actionHistory.push({
           id: <ToolActionType>action.value,
           path: [[e.x, e.y]],
+          attr: {
+            width: brushWidth.value,
+            color: brushColor.value,
+          },
         })
         if (action.value === 'MOSAIC') {
           mosaicOriginalPxData.value = createMosaicData(ctx.value!, 10)
@@ -198,7 +204,7 @@ export default defineComponent({
       const [dx, dy] = [x1 - x0, y1 - y0]
       mousePoint.value = [x1, y1]
       const [lastActionHistory] = actionHistory.slice(-1)
-      if (CAPTURE_ACTIONS.includes(action.value)) {
+      if (CAPTURE_ACTION_IDS.includes(action.value)) {
         switch (<CaptureActionType>action.value) {
           case 'CREATE':
             const [x, y] = [Math.min(x0, x1), Math.min(y0, y1)]
@@ -251,7 +257,7 @@ export default defineComponent({
           default:
             break
         }
-      } else if (TOOL_ACTIONS.includes(action.value)) {
+      } else if (TOOL_ACTION_IDS.includes(action.value)) {
         if (lastActionHistory?.id !== action.value) return
         const endPoint = pointBoundaryTreatment([x1, y1])
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -310,7 +316,7 @@ export default defineComponent({
       if (action.value === 'MOSAIC') {
         mosaicOriginalPxData.value = null
       }
-      if (CAPTURE_ACTIONS.includes(action.value!)) action.value = null
+      if (CAPTURE_ACTION_IDS.includes(action.value!)) action.value = null
       updateDrawBound()
     }
 

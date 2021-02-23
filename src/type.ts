@@ -56,9 +56,8 @@ export type ActionHistoryItem = {
   id: ToolActionType
   path?: Array<Point>
   snapshoot?: string
-  // TODO
   attr?: {
-    color: string
-    width: number
+    color?: string
+    width?: number
   }
 }
