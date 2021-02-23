@@ -1,3 +1,4 @@
+import { toRawType } from '@vue/shared'
 import type { Point } from 'src/type'
 import { canvasToBlob } from './canvas'
 
@@ -17,6 +18,8 @@ export function rafThrottle<T extends AnyFunction<any>>(
     })
   }
 }
+
+export const isHTMLElement = (val: unknown) => toRawType(val).startsWith('HTML')
 
 export function pointDistance([x0, y0]: Point, [x1, y1]: Point) {
   return ((x0 - x1) ** 2 + (y0 - y1) ** 2) ** 0.5
