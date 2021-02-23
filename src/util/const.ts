@@ -1,8 +1,8 @@
-export const CAPTURE_ACTIONS = Object.freeze(['CREATE', 'MOVE', 'RESIZE'])
+export const CAPTURE_ACTION_IDS = Object.freeze(['CREATE', 'MOVE', 'RESIZE'])
 
-export const TOOL_ACTIONS = Object.freeze(['TEXT', 'RECT', 'ELLIPSE', 'LINE', 'ARROW', 'BRUSH', 'MOSAIC'])
+export const TOOL_ACTION_IDS = Object.freeze(['TEXT', 'RECT', 'ELLIPSE', 'LINE', 'ARROW', 'BRUSH', 'MOSAIC'])
 
-export const CMD_ACTIONS = Object.freeze(['RETURN', 'SAVE', 'CANCEL', 'CONFIRM'])
+export const CMD_ACTION_IDS = Object.freeze(['RETURN', 'SAVE', 'CANCEL', 'CONFIRM'])
 
 /** KeyboardEvent code Map */
 export const EVENT_CODE = {
@@ -17,3 +17,6 @@ export const EVENT_CODE = {
   delete: 'Delete',
   backspace: 'Backspace',
 }
+
+export const DEFAULT_COLOR = '#ff0000'
+export const DEFAULT_WIDTH = 2
