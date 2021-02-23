@@ -6,33 +6,25 @@ const trim = function (s: string) {
   return (s || '').replace(/^[\s\uFEFF]+|[\s\uFEFF]+$/g, '')
 }
 
-export const on = function (
-  element: HTMLElement | Document | Window,
-  event: string,
-  handler: EventListenerOrEventListenerObject,
-  useCapture = false,
-): void {
-  if (element && event && handler) {
-    element.addEventListener(event, handler, useCapture)
-  }
+export function on<K extends keyof DocumentEventMap>(element: HTMLElement | Document | Window, type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+export function on(element: HTMLElement | Document | Window, type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void {
+  if (!element || !type || !listener) return
+  return element.addEventListener(type, listener, options ?? false)
 }
 
-export const off = function (
-  element: HTMLElement | Document | Window,
-  event: string,
-  handler: EventListenerOrEventListenerObject,
-): void {
-  if (element && event && handler) {
-    element.removeEventListener(event, handler, false)
-  }
+export function off<K extends keyof DocumentEventMap>(element: HTMLElement | Document | Window, type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+export function off(element: HTMLElement | Document | Window, type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void {
+  if (!element || !type || !listener) return
+  return element.removeEventListener(type, listener, options ?? false)
 }
 
-export function once(el: HTMLElement, event: string, fn: EventListener): void {
-  const listener = function (this: any, evt: Event) {
-    if (fn) fn.call(this, evt)
-    off(el, event, listener)
+export function once<K extends keyof DocumentEventMap>(el: HTMLElement | Document | Window, type: K, fn: (this: Document, ev: DocumentEventMap[K]) => any): void
+export function once(el: HTMLElement | Document | Window, type: string, fn: EventListener): void {
+  const listener = function (this: any, type: Event) {
+    if (fn) fn.call(this, type)
+    off(el, <any>type, listener)
   }
-  on(el, event, listener)
+  on(el, <any>type, listener)
 }
 
 export function hasClass(el: HTMLElement, cls: string): boolean {
