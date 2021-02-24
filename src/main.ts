@@ -11,7 +11,7 @@ if (import.meta.env.PROD) {
   s!.parentNode!.insertBefore(hm, s)
 }
 
-import('./assets/bigbadfox1080p.mkv_20201108_104416.220.jpg')
+import('./assets/IMG_303.jpeg')
   .then(res => fetch(res.default))
   .then(r => r.blob())
   .then(async b => {
