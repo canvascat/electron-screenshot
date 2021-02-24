@@ -10,10 +10,11 @@
       ></button>
     </template>
     <div v-if="color" class="color-box">
-      <button class="select-color" :style="{ backgroundColor: color }"></button>
+      <button class="select-color" :style="{ backgroundColor: color }" :title="color"></button>
       <button
         v-for="c in COLORS"
         :key="c"
+        :title="c"
         class="color__button"
         :style="{ backgroundColor: c }"
         :data-color="c"
@@ -38,7 +39,7 @@ import type { PropType } from 'vue'
 import { hsvFormatHex } from 'src/util/color'
 
 // const BASE_COLOR = parseInt('fff', 16) / 15
-const COLORS = ['#000', ...[...Array(18)].map((_, i) => hsvFormatHex(20 * i)), '#fff']
+const COLORS = ['#000000', ...[...Array(18)].map((_, i) => hsvFormatHex(20 * i)), '#ffffff']
 const WIDTHS = [2, 4, 6]
 
 export default defineComponent({
