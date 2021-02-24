@@ -37,11 +37,10 @@ import {
   action,
   actionHistory,
   bound,
-  brushColor,
-  brushWidth,
   canvasRef,
   captureLayer,
   drawBound,
+  getToolById,
   imageSource,
   inited,
   mosaicOriginalPxData,
@@ -50,6 +49,7 @@ import {
 import InfoBox from './components/info-box.vue'
 import ToolBox from './components/tool-box.vue'
 import type {
+  ActionHistoryItem,
   CaptureActionType,
   CmdActionType,
   Point,
@@ -157,14 +157,10 @@ export default defineComponent({
       if (!action.value) {
         startMove(e)
       } else if (TOOL_ACTION_IDS.includes(action.value)) {
-        actionHistory.push({
-          id: <ToolActionType>action.value,
-          path: [[e.x, e.y]],
-          attr: {
-            width: brushWidth.value,
-            color: brushColor.value,
-          },
-        })
+        const step: ActionHistoryItem = { id: <ToolActionType>action.value, path: [[e.x, e.y]] }
+        const attr = getToolById(action.value)?.attr
+        step.attr = Object.assign({}, attr)
+        actionHistory.push(step)
         if (action.value === 'MOSAIC') {
           mosaicOriginalPxData.value = createMosaicData(ctx.value!, 10)
         }

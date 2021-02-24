@@ -1,5 +1,5 @@
 import { reactive, ref, shallowReactive } from 'vue'
-import type { ActionHistoryItem, Bound, ActionType, CaptureLayer, Point } from './type'
+import type { ActionHistoryItem, Bound, ActionType, CaptureLayer, Point, ToolAction } from './type'
 import { DEFAULT_COLOR, DEFAULT_WIDTH } from './util/const'
 
 export const imageSource = new Image()
@@ -42,6 +42,14 @@ export function updateDrawBound (ah = actionHistory) {
 /** 绘制马赛克的图片原始像素数据 */
 export const mosaicOriginalPxData = ref(<Nullable<Uint8ClampedArray>>null)
 
-export const brushColor = ref(DEFAULT_COLOR)
+export const TOOL_ACTIONS: Array<ToolAction> = [
+  { icon: 'A', label: '添加文字(TODO)', id: 'TEXT', cursor: 'text' },
+  { icon: '⬜', label: '矩形工具', id: 'RECT', attr: reactive({ color: DEFAULT_COLOR, width: DEFAULT_WIDTH }) },
+  { icon: '⚪', label: '椭圆工具', id: 'ELLIPSE', attr: reactive({ color: DEFAULT_COLOR, width: DEFAULT_WIDTH }) },
+  { icon: '╱', label: '直线工具', id: 'LINE', attr: reactive({ color: DEFAULT_COLOR, width: DEFAULT_WIDTH }) },
+  { icon: '↗', label: '箭头工具', id: 'ARROW', attr: reactive({ color: DEFAULT_COLOR, width: DEFAULT_WIDTH }) },
+  { icon: '🖊', label: '笔刷工具', id: 'BRUSH', attr: reactive({ color: DEFAULT_COLOR, width: DEFAULT_WIDTH }) },
+  { icon: '🐴', label: '马赛克工具', id: 'MOSAIC' }, // 🐎🐴
+]
 
-export const brushWidth = ref(DEFAULT_WIDTH)
+export const getToolById = (id: string) => TOOL_ACTIONS.find(t => t.id === id)

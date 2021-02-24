@@ -1,5 +1,6 @@
-import { bound, brushColor, brushWidth, canvasRef, imageSource, mosaicOriginalPxData } from 'src/store'
+import { bound,  canvasRef, imageSource, mosaicOriginalPxData } from 'src/store'
 import { ActionHistoryItem, Point } from 'src/type'
+import { DEFAULT_COLOR, DEFAULT_WIDTH } from './const'
 
 /** PI/6 */
 const ARROW_ANGLE = Math.PI / 6
@@ -269,8 +270,7 @@ export function updateCanvas(
   ctx.clearRect(0, 0, bound.x.max, bound.y.max)
   ctx.drawImage(image, 0, 0)
   actionHistory.forEach(item => {
-    const width = item.attr?.width ?? brushWidth.value
-    const color = item.attr?.color ?? brushColor.value
+    const { width = DEFAULT_WIDTH, color = DEFAULT_COLOR } = item.attr ?? {}
     switch (item.id) {
       case 'LINE': {
         const [startPoint, endPoint] = item.path!

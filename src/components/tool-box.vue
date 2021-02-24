@@ -21,9 +21,9 @@
     </button>
   </div>
   <StyleBox
-    v-if="styleBoxVisibility"
-    v-model:color="brushColor"
-    v-model:width="brushWidth"
+    v-if="currentTool?.attr"
+    v-model:color="currentTool.attr.color"
+    v-model:width="currentTool.attr.width"
     :reference="toolBoxRef"
   />
 </template>
@@ -34,18 +34,16 @@ import {
   action,
   actionHistory,
   bound,
-  brushColor,
-  brushWidth,
   canvasRef,
   captureLayer,
   imageSource,
   inited,
+  TOOL_ACTIONS,
   updateDrawBound,
 } from 'src/store'
 import type {
   CmdAction,
   CmdActionType,
-  ToolAction,
   ToolActionType,
 } from 'src/type'
 import {
@@ -66,16 +64,6 @@ import {
 } from 'vue'
 
 const OFFSET = { X: 0, Y: 6 }
-
-const TOOL_ACTIONS: Array<ToolAction> = [
-  { icon: 'A', label: '添加文字(TODO)', id: 'TEXT', cursor: 'text' },
-  { icon: '⬜', label: '矩形工具', id: 'RECT' },
-  { icon: '⚪', label: '椭圆工具', id: 'ELLIPSE' },
-  { icon: '╱', label: '直线工具', id: 'LINE' },
-  { icon: '↗', label: '箭头工具', id: 'ARROW' },
-  { icon: '🖊', label: '笔刷工具', id: 'BRUSH' }, // 🐎🐴
-  { icon: '🐴', label: '马赛克工具', id: 'MOSAIC' },
-]
 
 const OPT_ACTIONS: Array<CmdAction> = [
   { icon: '↩', label: '撤销', id: 'RETURN' },
@@ -116,8 +104,9 @@ export default defineComponent({
       }
       return style
     })
-    const SHOW_STYLE_BOX_TOOL_IDS = ['LINE','RECT', 'ARROW', 'ELLIPSE']
-    const styleBoxVisibility = computed(() => action.value && SHOW_STYLE_BOX_TOOL_IDS.includes(action.value))
+    // const SHOW_STYLE_BOX_TOOL_IDS = ['LINE','RECT', 'ARROW', 'ELLIPSE', 'BRUSH']
+    const currentTool = computed(() => TOOL_ACTIONS.find(({ id }) => id === action.value))
+    const styleBoxVisibility = computed(() => currentTool.value?.attr)
     const updateClientRect = rafThrottle(function() {
       const { width: w, height: h } = toolBoxRef.value!.getBoundingClientRect()
       Object.assign(clientRect, { w, h })
@@ -193,8 +182,7 @@ export default defineComponent({
       style,
       action,
       styleBoxVisibility,
-      brushColor,
-      brushWidth,
+      currentTool,
 
       handleExecCmd,
       handleUpdateTool,

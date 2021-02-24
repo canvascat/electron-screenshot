@@ -1,13 +1,15 @@
 <template>
   <div ref="popperRef" class="style-box">
-    <button
-      v-for="w in WIDTHS"
-      :key="w"
-      :class="['width__button', w === width && 'active']"
-      :style="`--size-width-height: ${w}px;`"
-      @click="$emit('update:width', w)"
-    ></button>
-    <div class="color-box">
+    <template v-if="width">
+      <button
+        v-for="w in WIDTHS"
+        :key="w"
+        :class="['width__button', w === width && 'active']"
+        :style="`--size-width-height: ${w}px;`"
+        @click="$emit('update:width', w)"
+      ></button>
+    </template>
+    <div v-if="color" class="color-box">
       <button class="select-color" :style="{ backgroundColor: color }"></button>
       <button
         v-for="c in COLORS"
@@ -53,11 +55,9 @@ export default defineComponent({
     },
     color: {
       type: String,
-      default: '#ff0000',
     },
     width: {
       type: Number,
-      default: 2,
     },
   },
 
@@ -149,7 +149,7 @@ export default defineComponent({
   grid-row: 1 / span 2;
   width: 28px;
   height: 28px;
-  border: 1px solid #333;
+  border: 1px solid #ccc;
   margin: auto;
   box-sizing: border-box;
   border-radius: 0;
@@ -157,7 +157,7 @@ export default defineComponent({
 .color__button {
   width: 12px;
   height: 12px;
-  border: 1px solid #333;
+  border: 1px solid #ccc;
   padding: 0;
   margin: auto;
   box-sizing: border-box;
