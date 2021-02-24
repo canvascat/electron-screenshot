@@ -1,3 +1,4 @@
+import { random, range } from 'lodash'
 import { createApp } from 'vue'
 import App from './App.vue'
 import { imageSource } from './store'
@@ -11,10 +12,8 @@ if (import.meta.env.PROD) {
   s!.parentNode!.insertBefore(hm, s)
 }
 
-import('./assets/IMG_303.jpeg')
-  .then(res => fetch(res.default))
+Promise.all(range(0, 8).map(i => import(`./assets/${i}.jpg`).then(r => r.default)))
+  .then(urls => fetch(urls[random(7)]))
   .then(r => r.blob())
-  .then(async b => {
-    await loadImage(URL.createObjectURL(b), imageSource)
-    createApp(App).mount('#app')
-  })
+  .then(b => loadImage(URL.createObjectURL(b), imageSource))
+  .then(() => createApp(App).mount('#app'))

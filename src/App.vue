@@ -159,7 +159,7 @@ export default defineComponent({
       } else if (TOOL_ACTION_IDS.includes(action.value)) {
         const step: ActionHistoryItem = { id: <ToolActionType>action.value, path: [[e.x, e.y]] }
         const attr = getToolById(action.value)?.attr
-        step.attr = Object.assign({}, attr)
+        attr && Object.assign(step, { attr: cloneDeep(attr) })
         actionHistory.push(step)
         if (action.value === 'MOSAIC') {
           mosaicOriginalPxData.value = createMosaicData(ctx.value!, 10)
