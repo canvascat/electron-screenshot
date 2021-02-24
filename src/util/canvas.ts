@@ -171,13 +171,15 @@ export function drawMosaic(
   path: Array<Point>,
   size = 10,
   brushWidth = 30,
-  data: Uint8ClampedArray,
+  data?: Uint8ClampedArray,
 ) {
   const { height, width } = ctx.canvas
   const drawData = createDrawMosaicLayerData(width, height, path, brushWidth / 2)
   const [wl, hl] = [Math.ceil(width / size), Math.ceil(height / size)]
   const originalData = ctx.getImageData(0, 0, width, height).data
   const newData = new Uint8ClampedArray(width * height * 4)
+  // 连续绘制的的时候使用下笔前的 mosaic data，回退操作绘制时使用当前步骤执行前的画布生成的data
+  data ??= createMosaicData(ctx, size)
   for (let y = 0; y < hl; y++) {
     const [startY, endY] = [y * size, Math.min((y + 1) * size, height)]
     for (let x = 0; x < wl; x++) {
