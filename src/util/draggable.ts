@@ -1,4 +1,5 @@
 import { on, off } from 'src/util/dom'
+import { rafThrottle } from 'src/util/util'
 
 let isDragging = false
 
@@ -9,9 +10,9 @@ export declare interface IOptions {
 }
 
 export default function (element: HTMLElement, options: IOptions) {
-  const moveFn = function (event: MouseEvent) {
+  const moveFn = rafThrottle(function (event: MouseEvent) {
     options.drag?.(event)
-  }
+  })
 
   const upFn = function (event: MouseEvent) {
     off(document, 'mousemove', moveFn)
