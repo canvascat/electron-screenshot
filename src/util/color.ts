@@ -1,4 +1,4 @@
-import { isEmpty } from 'lodash'
+import { isEmpty, range } from 'lodash'
 
 type ColorArray = [number, number, number]
 type HexArray = [string, string, string]
@@ -246,16 +246,15 @@ export default class Color {
       }
     } else if (val.indexOf('#') !== -1) {
       const hex = val.replace('#', '').trim()
-      if (!/^[0-9a-fA-F]$/.test(hex)) return
+      if (!/^[0-9a-fA-F]*$/.test(hex)) return
       const len = hex.length
       if (![3, 4, 6, 8].includes(len)) return
       const pad = (v: string) => v.length === 1 ? v + v : v
       const parseHexChannel = (v: string) => parseInt(pad(v), 16)
       const channelLen = len === 3 || len === 4 ? 1 : 2
-      const rgba = Array(len / channelLen).map((_, i) => parseHexChannel(hex.substr(i * channelLen, channelLen)))
-
-      this.alpha = rgba.length === 4 ? Math.floor(rgba[3] / 255 * 100) : 100
-      fromHSV(...rgb2hsv(rgba[0], rgba[1], rgba[2]))
+      const [r, g, b, a] = range(len / channelLen).map(i => parseHexChannel(hex.substr(i * channelLen, channelLen)))
+      this.alpha = Math.floor(a ?? 255 / 255 * 100)
+      fromHSV(...rgb2hsv(r, g, b))
     }
   }
 
