@@ -9,7 +9,7 @@ const trim = function (s: string) {
 export function on<K extends keyof DocumentEventMap>(element: HTMLElement | Document | Window, type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
 export function on(element: HTMLElement | Document | Window, type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void {
   if (!element || !type || !listener) return
-  return element.addEventListener(type, listener, options ?? false)
+  element.addEventListener(type, listener, options ?? false)
 }
 
 export function off<K extends keyof DocumentEventMap>(element: HTMLElement | Document | Window, type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
@@ -20,8 +20,8 @@ export function off(element: HTMLElement | Document | Window, type: string, list
 
 export function once<K extends keyof DocumentEventMap>(el: HTMLElement | Document | Window, type: K, fn: (this: Document, ev: DocumentEventMap[K]) => any): void
 export function once(el: HTMLElement | Document | Window, type: string, fn: EventListener): void {
-  const listener = function (this: any, type: Event) {
-    if (fn) fn.call(this, type)
+  const listener = function (evt: Event) {
+    if (fn) fn.call(this, evt)
     off(el, <any>type, listener)
   }
   on(el, <any>type, listener)
