@@ -13,7 +13,7 @@ if (import.meta.env.PROD) {
 }
 
 Promise.all(range(0, 8).map(i => import(`./assets/${i}.jpg`).then(r => r.default)))
-  .then(urls => fetch(urls[random(7)]))
+  .then(urls => fetch(urls[random(urls.length) - 1]))
   .then(r => r.blob())
   .then(b => loadImage(URL.createObjectURL(b), imageSource))
   .then(() => createApp(App).mount('#app'))
