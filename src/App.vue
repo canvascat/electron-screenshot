@@ -313,6 +313,11 @@ export default defineComponent({
         mosaicOriginalPxData.value = null
       }
       if (CAPTURE_ACTION_IDS.includes(action.value!)) action.value = null
+      // TODO: 清理无效步骤，分情况讨论
+      const [lastActionItem] = actionHistory.slice(-1)
+      if (lastActionItem && lastActionItem.path && lastActionItem.path.length <= 1) {
+        actionHistory.pop()
+      }
       updateDrawBound()
     }
 
@@ -341,7 +346,6 @@ export default defineComponent({
     })
 
     return {
-      startCapture,
       onMousedownCaptureLayer,
       startResize,
       handleToolCmd,
