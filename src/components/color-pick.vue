@@ -83,6 +83,9 @@ export default defineComponent({
     watch([() => color.value, () => color.saturation], () => {
       updateSv()
     })
+    watch(() => color.hue, () => {
+      hue.value = color.hue
+    })
 
     function updateSv() {
       const { saturation, value } = color
