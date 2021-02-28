@@ -2,6 +2,7 @@
   "name": "electron-screenshot",
   "version": "0.0.0",
   "author": "canvascat<canvascat@qq.com>",
+  "homepage": "https://canvascat.github.io/electron-screenshot",
   "scripts": {
     "dev": "vite",
     "check": "vuedx-typecheck .",
