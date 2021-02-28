@@ -1,40 +1,37 @@
 import { on } from 'src/util/dom'
 import type { ComponentPublicInstance, DirectiveBinding, ObjectDirective } from 'vue'
 
-
 type DocumentHandler = <T extends MouseEvent>(mouseup: T, mousedown: T) => void;
 
-type FlushList = Map<
-  HTMLElement,
-  {
-    documentHandler: DocumentHandler
-    bindingFn: (...args: unknown[]) => unknown
-  }
->;
+type FlushListItem = {
+  documentHandler: DocumentHandler
+  bindingFn: (...args: unknown[]) => unknown
+  type?: 'down' | 'up'
+}
+
+type FlushList = Map<HTMLElement, FlushListItem>;
 
 const nodeList: FlushList = new Map()
 
-let startClick: MouseEvent
+let startClick: Nullable<MouseEvent> = null
 
-
-on(document, 'mousedown', (e: MouseEvent) => (startClick = e))
-on(document, 'mouseup', (e: MouseEvent) => {
-  for (const { documentHandler } of nodeList.values()) {
-    documentHandler(e, startClick)
+on(document, 'mousedown', (e: MouseEvent) => {
+  startClick = e
+  for (const { documentHandler, type } of nodeList.values()) {
+    type === 'down' && documentHandler(e, startClick)
   }
+})
+on(document, 'mouseup', (e: MouseEvent) => {
+  for (const { documentHandler, type } of nodeList.values()) {
+    type !== 'down' && documentHandler(e, startClick!)
+  }
+  startClick = null
 })
 
 function createDocumentHandler(
   el: HTMLElement,
   binding: DirectiveBinding,
 ): DocumentHandler {
-  let excludes: HTMLElement[] = []
-  if (Array.isArray(binding.arg)) {
-    excludes = binding.arg
-  } else {
-    // due to current implementation on binding type is wrong the type casting is necessary here
-    excludes.push(binding.arg as unknown as HTMLElement)
-  }
   return function(mouseup, mousedown) {
     const popperRef = (binding.instance as ComponentPublicInstance<{
       popperRef: Nullable<HTMLElement>
@@ -46,12 +43,6 @@ function createDocumentHandler(
     const isContainedByEl = el.contains(mouseUpTarget) || el.contains(mouseDownTarget)
     const isSelf = el === mouseUpTarget
 
-    const isTargetExcluded =
-      ( excludes.length &&
-        excludes.some(item => item?.contains(mouseUpTarget))
-      ) || (
-        excludes.length && excludes.includes(mouseDownTarget as HTMLElement)
-      )
     const isContainedByPopper = (
       popperRef &&
       (
@@ -64,7 +55,6 @@ function createDocumentHandler(
       isTargetExists ||
       isContainedByEl ||
       isSelf ||
-      isTargetExcluded ||
       isContainedByPopper
     ) {
       return
@@ -73,18 +63,20 @@ function createDocumentHandler(
   }
 }
 
-const ClickOutside: ObjectDirective = {
+function createFlushListItem (el: HTMLElement, binding: DirectiveBinding<any>) {
+  return <FlushListItem>{
+    documentHandler: createDocumentHandler(el, binding),
+    bindingFn: binding.value,
+    type: binding.arg ?? 'up',
+  }
+}
+
+const ClickOutside: ObjectDirective<HTMLElement> = {
   beforeMount(el, binding) {
-    nodeList.set(el, {
-      documentHandler: createDocumentHandler(el, binding),
-      bindingFn: binding.value,
-    })
+    nodeList.set(el, createFlushListItem(el, binding))
   },
   updated(el, binding) {
-    nodeList.set(el, {
-      documentHandler: createDocumentHandler(el, binding),
-      bindingFn: binding.value,
-    })
+    nodeList.set(el, createFlushListItem(el, binding))
   },
   unmounted(el) {
     nodeList.delete(el)
