@@ -175,8 +175,8 @@ export default defineComponent({
     border-color: #aaa;
   }
   &.active {
-    background-color: #eee;
-    border-color: #ccc;
+    background-color: #ededed;
+    border-color: #999;
   }
 }
 .color-box {

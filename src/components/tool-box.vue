@@ -217,10 +217,14 @@ export default defineComponent({
   border-radius: 2px;
   border: 1px solid transparent;
   background-color: transparent;
-  &.active,
+  outline: 0;
   &:hover {
     background-color: #f7f7f7;
-    border-color: skyblue;
+    border-color: #aaa;
+  }
+  &.active {
+    background-color: #ededed;
+    border-color: #999;
   }
 }
 .tool-divider {
