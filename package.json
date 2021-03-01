@@ -3,6 +3,10 @@
   "version": "0.0.0",
   "author": "canvascat<canvascat@qq.com>",
   "homepage": "https://canvascat.github.io/electron-screenshot",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/canvascat/electron-screenshot.git"
+  },
   "scripts": {
     "dev": "vite",
     "check": "vuedx-typecheck .",
