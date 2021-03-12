@@ -90,7 +90,7 @@ export function drawEllipse(
 ) {
   const [[x1, y1], [x2, y2]] = [startPoint, endPoint]
   const [r1, r2] = [x1 - x2, y1 - y2].map(n => Math.abs(n / 2))
-  const [x0, y0] = [(x1 + x2) / 2, (y1 + y2) / 2]
+  const [x0, y0] = [(x1 + x2) >> 1, (y1 + y2) >> 1]
   const r = Math.max(r1, r2)
   const [rx, ry] = [r1 / r, r2 / r]
   ctx.save()
