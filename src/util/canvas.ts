@@ -1,4 +1,4 @@
-import { bound,  canvasRef, imageSource, mosaicOriginalPxData } from 'src/store'
+import { bound, canvasRef, imageSource, mosaicOriginalPxData } from 'src/store'
 import { ActionHistoryItem, Point } from 'src/type'
 import { DEFAULT_COLOR, DEFAULT_WIDTH } from './const'
 
@@ -134,19 +134,29 @@ export function createMosaicData(ctx: CanvasRenderingContext2D, size = 10) {
   const { width, height } = ctx.canvas
   const [wl, hl] = [Math.ceil(width / size), Math.ceil(height / size)]
   const data = ctx.getImageData(0, 0, width, height).data
-  const md = new Uint8ClampedArray(wl * hl * 4)
+  const md = new Uint8ClampedArray(wl * hl << 2)
   for (let i = 0; i < wl * hl; i++) {
-    const sy = Math.floor(i / wl)
+    const sy = i / wl | 0
     const sx = i - sy * wl
-    let [sumR, sumG, sumB, total] = [0, 0, 0, 0]
+    let sumR = 0,
+      sumG = 0,
+      sumB = 0,
+      total = 0
     for (let y = sy * size; y < Math.min((sy + 1) * size, height); y++) {
       const stratY = y * width
       for (let x = sx * size; x < Math.min((sx + 1) * size, width); x++) {
-        const sIndex = (stratY + x) * 4
-        sumR += data[sIndex], sumG += data[sIndex + 1], sumB += data[sIndex + 2], total++
+        let sIndex = (stratY + x) << 2
+        sumR += data[sIndex++]
+        sumG += data[sIndex++]
+        sumB += data[sIndex]
+        total++
       }
     }
-    [md[i * 4], md[i * 4 + 1], md[i * 4 + 2], md[i * 4 + 3]] = [sumR / total, sumG / total, sumB / total, 255]
+    let startIndex = i << 2
+    md[startIndex++] = sumR / total
+    md[startIndex++] = sumG / total
+    md[startIndex++] = sumB / total
+    md[startIndex] = 255
   }
   return md
 }
@@ -174,32 +184,34 @@ export function drawMosaic(
   data?: Uint8ClampedArray,
 ) {
   const { height, width } = ctx.canvas
-  const drawData = createDrawMosaicLayerData(width, height, path, brushWidth / 2)
+  const drawData = createDrawMosaicLayerData(width, height, path, brushWidth >> 1)
   const [wl, hl] = [Math.ceil(width / size), Math.ceil(height / size)]
   const originalData = ctx.getImageData(0, 0, width, height).data
-  const newData = new Uint8ClampedArray(width * height * 4)
+  const newData = new Uint8ClampedArray(width * height << 2)
   // 连续绘制的的时候使用下笔前的 mosaic data，回退操作绘制时使用当前步骤执行前的画布生成的data
   data ??= createMosaicData(ctx, size)
   for (let y = 0; y < hl; y++) {
     const [startY, endY] = [y * size, Math.min((y + 1) * size, height)]
     for (let x = 0; x < wl; x++) {
       const [startX, endX] = [x * size, Math.min((x + 1) * size, width)]
-      const index = (y * wl + x) * 4
-      const [R, G, B, A] = [data[index], data[index + 1], data[index + 2], 255]
+      let index = (y * wl + x) << 2
+      const R = data[index++],
+        G = data[index++],
+        B = data[index]
       for (let y0 = startY; y0 < endY; y0++) {
         for (let x0 = startX; x0 < endX; x0++) {
           const dIndex = y0 * width + x0
-          const nIndex = dIndex * 4
+          let nIndex = dIndex << 2
           if (drawData[dIndex]) {
-            newData[nIndex] = R
-            newData[nIndex + 1] = G
-            newData[nIndex + 2] = B
-            newData[nIndex + 3] = A
+            newData[nIndex++] = R
+            newData[nIndex++] = G
+            newData[nIndex++] = B
+            newData[nIndex] = 255
           } else {
             newData[nIndex] = originalData[nIndex]
-            newData[nIndex + 1] = originalData[nIndex + 1]
-            newData[nIndex + 2] = originalData[nIndex + 2]
-            newData[nIndex + 3] = originalData[nIndex + 3]
+            newData[++nIndex] = originalData[nIndex]
+            newData[++nIndex] = originalData[nIndex]
+            newData[++nIndex] = originalData[nIndex]
           }
         }
       }
