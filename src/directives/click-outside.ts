@@ -13,7 +13,7 @@ type FlushList = Map<HTMLElement, FlushListItem>;
 
 const nodeList: FlushList = new Map()
 
-let startClick: Nullable<MouseEvent> = null
+let startClick: MouseEvent | undefined
 
 on(document, 'mousedown', (e: MouseEvent) => {
   startClick = e
@@ -25,7 +25,7 @@ on(document, 'mouseup', (e: MouseEvent) => {
   for (const { documentHandler, type } of nodeList.values()) {
     type !== 'down' && documentHandler(e, startClick!)
   }
-  startClick = null
+  startClick = undefined
 })
 
 function createDocumentHandler(
@@ -34,7 +34,7 @@ function createDocumentHandler(
 ): DocumentHandler {
   return function(mouseup, mousedown) {
     const popperRef = (binding.instance as ComponentPublicInstance<{
-      popperRef: Nullable<HTMLElement>
+      popperRef?: HTMLElement
     }>).popperRef
     const mouseUpTarget = mouseup.target as Node
     const mouseDownTarget = mousedown.target as Node

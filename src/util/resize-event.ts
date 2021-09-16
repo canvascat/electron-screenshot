@@ -1,5 +1,7 @@
 import ResizeObserver from 'resize-observer-polyfill'
 
+type CustomizedHTMLElement<T> = HTMLElement & T;
+
 export type ResizableElement = CustomizedHTMLElement<{
   __resizeListeners__: Array<(...args: unknown[]) => unknown>
   __ro__: ResizeObserver

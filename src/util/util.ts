@@ -2,22 +2,7 @@ import { toRawType } from '@vue/shared'
 import type { Point } from 'src/type'
 import { canvasToBlob } from './canvas'
 
-export const sleep = (t = 0): Promise<undefined> => new Promise(resolve => setTimeout(resolve, t))
-
-export type AnyFunction<T> = (...args: any[]) => T
-export function rafThrottle<T extends AnyFunction<any>>(
-  fn: T,
-): AnyFunction<void> {
-  let locked = false
-  return function (...args: any[]) {
-    if (locked) return
-    locked = true
-    window.requestAnimationFrame(() => {
-      fn.apply(this, args)
-      locked = false
-    })
-  }
-}
+export const sleep = (t = 0): Promise<void> => new Promise(resolve => setTimeout(resolve, t))
 
 export const isHTMLElement = (val: unknown) => toRawType(val).startsWith('HTML')
 
@@ -36,21 +21,21 @@ export async function createNotification(options?: NotificationOptions, title = 
   return await createNotification(options, title)
 }
 
-export const getScreenCapture = () => navigator.mediaDevices.getDisplayMedia()
-  .then(stream => new Promise((resolve: (video: HTMLVideoElement) => void, reject) => {
+export async function getScreenCapture() {
+  const stream = await navigator.mediaDevices.getDisplayMedia()
+  const video = await new Promise((resolve: (video: HTMLVideoElement) => void, reject) => {
     const video = document.createElement('video')
     video.setAttribute('autoplay', 'true')
     sleep(1000).then(reject)
     video.onplay = () => resolve(video)
     video.srcObject = stream
-  }))
-  .then(video => {
-    const { videoHeight: height, videoWidth: width } = video
-    const canvas = document.createElement('canvas')
-    Object.assign(canvas, { height, width })
-    canvas.getContext('2d')?.drawImage(video, 0, 0)
-    const tracks = (video.srcObject as MediaStream).getTracks()
-    tracks.forEach(track => track.stop())
-    video.srcObject = null
-    return canvasToBlob(canvas)
   })
+  const { videoHeight: height, videoWidth: width } = video
+  const canvas = document.createElement('canvas')
+  Object.assign(canvas, { height, width })
+  canvas.getContext('2d')?.drawImage(video, 0, 0)
+  const tracks = (video.srcObject as MediaStream).getTracks()
+  tracks.forEach(track => track.stop())
+  video.srcObject = null
+  return canvasToBlob(canvas)
+}

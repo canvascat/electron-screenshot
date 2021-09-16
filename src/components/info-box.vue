@@ -14,11 +14,11 @@
   </div>
 </template>
 
-<script lang="ts">
-import { rafThrottle } from 'src/util/util'
-import { computed, defineComponent, PropType, ref, toRefs, watch } from 'vue'
+<script lang="ts" setup>
+import { computed, ref, toRefs, watch, toRef } from 'vue'
 import { bound } from 'src/store'
 import { Point } from 'src/type'
+import { throttle } from 'lodash'
 
 const SIZE = 120
 const OFFSET = { X: 10, Y: 10 }
@@ -26,65 +26,34 @@ const ZOOM_FACTOR = 4
 const [DW, DH] = [120, 88]
 const [SW, SH] = [DW / ZOOM_FACTOR, DH / ZOOM_FACTOR]
 
-export default defineComponent({
-  props: {
-    mousePoint: {
-      type: Object as PropType<Nullable<Point>>,
-      required: true,
-    },
-    canvas: {
-      type: Object as PropType<Nullable<HTMLCanvasElement>>,
-      required: true,
-    },
-  },
+const props = defineProps<{
+  mousePoint?: Point,
+  canvas?: HTMLCanvasElement
+}>()
+const mousePoint = toRef(props, 'mousePoint')
 
-  setup(props) {
-    const { mousePoint, canvas } = toRefs(props)
-    const canvasRef = ref(<Nullable<HTMLCanvasElement>>null)
-    const style = computed(() => {
-      const style = <{ [key: string]: string; }>{}
-      if (mousePoint.value) {
-        const [x, y] = mousePoint.value
-        const [w, h] = [OFFSET.X + SIZE, OFFSET.Y + SIZE]
-        const left = x + w > bound.x.max ? x - w : x + OFFSET.X
-        const top = y + h > bound.y.max ? y - h : y + OFFSET.Y
-        style.left = `${left}px`
-        style.top = `${top}px`
-      }
-      return style
-    })
-
-    watch(
-      mousePoint,
-      rafThrottle((point: Nullable<Point>) => {
-        if (!point || !canvas.value || !canvasRef.value) return
-        const [x, y] = point
-        const ctx = <CanvasRenderingContext2D>canvasRef.value.getContext('2d')
-        ctx.clearRect(0, 0, DW, DH)
-        ctx.drawImage(
-          canvas.value,
-          x - SW / 2,
-          y - SH / 2,
-          SW,
-          SH,
-          0,
-          0,
-          DW,
-          DH,
-        )
-      }),
-    )
-    document.body.style
-    return {
-      canvasRef,
-
-      DW,
-      DH,
-
-      style,
-    }
-  },
+const canvasRef = ref<HTMLCanvasElement>()
+const style = computed(() => {
+  const style = <{ [key: string]: string; }>{}
+  if (mousePoint?.value) {
+    const [x, y] = mousePoint.value
+    const [w, h] = [OFFSET.X + SIZE, OFFSET.Y + SIZE]
+    const left = x + w > bound.x.max ? x - w : x + OFFSET.X
+    const top = y + h > bound.y.max ? y - h : y + OFFSET.Y
+    style.left = `${left}px`
+    style.top = `${top}px`
+  }
+  return style
 })
+
+watch(mousePoint, throttle((point) => {
+  const { canvas } = props
+  if (!point || !canvas || !canvasRef.value) return
+  const [x, y] = point
+  const ctx = canvasRef.value.getContext('2d')!
+  ctx.clearRect(0, 0, DW, DH)
+  ctx.drawImage(canvas, x - SW / 2, y - SH / 2, SW, SH, 0, 0, DW, DH)
+}))
 </script>
 
 <style lang="scss" scoped>

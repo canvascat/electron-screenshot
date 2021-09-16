@@ -12,14 +12,17 @@ if (import.meta.env.PROD) {
   s!.parentNode!.insertBefore(hm, s)
 }
 
-async function createRandomImage () {
-  const modules = Object.values(import.meta.glob('./assets/*.jpg'))
-  const importModule = modules[random(modules.length) - 1]
-  const module = await importModule()
-  const response = await fetch(module.default)
+async function createRandomImage (input?: string) {
+  if (!input) {
+    const modules = Object.values(import.meta.glob('./assets/*.jpg'))
+    const importModule = modules[random(modules.length) - 1]
+    const module = await importModule()
+    input = module.default as string
+  }
+  const response = await fetch(input)
   return await response.blob()
 }
 
-createRandomImage()
+createRandomImage('/src/assets/2021-09-16 115153.png')
   .then(b => loadImage(URL.createObjectURL(b), imageSource))
   .then(() => createApp(App).mount('#app'))

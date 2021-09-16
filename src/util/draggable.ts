@@ -1,5 +1,5 @@
+import { throttle } from 'lodash'
 import { on, off } from 'src/util/dom'
-import { rafThrottle } from 'src/util/util'
 
 let isDragging = false
 
@@ -16,7 +16,7 @@ export default function (element: HTMLElement, lister: MouseEventLister): void
 export default function (element: HTMLElement, options: IOptions): void
 export default function (element: HTMLElement, all: IOptions | MouseEventLister) {
   const options = typeof all === 'function' ? { all } : all
-  const moveFn = rafThrottle(function (event: MouseEvent) {
+  const moveFn = throttle(function (event: MouseEvent) {
     (options.drag ?? options.all)?.(event)
   })
 

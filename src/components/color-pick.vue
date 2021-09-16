@@ -12,125 +12,106 @@
   </div>
 </template>
 
-<script lang="ts">
-import { computed, defineComponent, onMounted, reactive, ref, toRefs, watch } from 'vue'
-import type {  PropType } from 'vue'
+<script lang="ts" setup>
+import { computed, onMounted, reactive, ref, toRef, watch } from 'vue'
+import type { PropType } from 'vue'
 import draggable from 'src/util/draggable'
 import { default as Color } from 'src/util/color'
 import { createPopper } from '@popperjs/core'
 import type { Instance as PopperInstance } from '@popperjs/core'
 
-export default defineComponent({
-  name: 'ColorPick',
+const props = withDefaults(defineProps<{
+  modelValue?: string
+  reference?: HTMLElement
+  visibility: boolean
+}>(), {
+  visibility: true
+})
+const emits = defineEmits<{
+  (event: 'update:modelValue', value: string): void
+}>()
+const visibility = toRef(props, 'visibility')
 
-  props: {
-    modelValue: String,
-    reference: {
-      type: Object as PropType<Nullable<HTMLElement>>,
-      required: true,
-    },
-    visibility: {
-      type: Boolean,
-      default: true,
-    },
-  },
+const popperRef = ref<HTMLElement>()
+const hueRef = ref<HTMLElement>()
+const svRef = ref<HTMLElement>()
+const svTransform = ref('')
+const hue = ref(0)
+let popperInstance: PopperInstance | undefined
+const color = reactive(new Color({
+  color: props.modelValue || '#ff0000',
+}))
 
-  emits: ['update:modelValue'],
+const background = computed(() => 'hsl(' + color.hue + ', 100%, 50%)')
 
-  setup(props, { emit }) {
-    const { reference, visibility } = toRefs(props)
-    const popperRef = ref(<Nullable<HTMLElement>>null)
-    const hueRef = ref(<Nullable<HTMLElement>>null)
-    const svRef = ref(<Nullable<HTMLElement>>null)
-    const svTransform = ref('')
-    const hue  = ref(0)
-    let popperInstance = <Nullable<PopperInstance>>null
-    const color = reactive(new Color({
-      color: props.modelValue || '#ff0000',
-    }))
+function handleHueDrag(evt: MouseEvent) {
+  const el = hueRef.value
+  if (!el) return
+  const rect = el.getBoundingClientRect()
+  const [x0, y0] = [rect.left + rect.width / 2, rect.top + rect.height / 2]
+  const [dx, dy] = [evt.x - x0, evt.y - y0]
+  hue.value = Math.floor(Math.atan(dy / dx) * 180 / Math.PI)
+  if (dx < 0) hue.value += 180
+  if (hue.value < 0) hue.value += 360
+  color.update({ hue: hue.value })
+}
+function handleSvDrag(event: MouseEvent) {
+  const el = svRef.value
+  if (!el) return
+  const rect = el.getBoundingClientRect()
+  const top = Math.min(Math.max(0, event.clientY - rect.top), rect.height)
+  const left = Math.min(Math.max(0, event.clientX - rect.left), rect.width)
+  const { width, height } = rect
+  color.update({
+    saturation: left / width * 100,
+    value: 100 - top / height * 100,
+  })
+}
+watch(() => props.modelValue, val => {
+  val && color.fromString(val)
+})
+watch(() => color.color, val => {
+  emits('update:modelValue', val)
+})
+watch([() => color.value, () => color.saturation], () => {
+  updateSv()
+})
+watch(() => color.hue, () => {
+  hue.value = color.hue
+})
 
-    const background = computed(() => 'hsl(' + color.hue + ', 100%, 50%)')
+function updateSv() {
+  const { saturation, value } = color
 
-    function handleHueDrag (evt: MouseEvent) {
-      const el = hueRef.value
-      if (!el) return
-      const rect = el.getBoundingClientRect()
-      const [x0, y0] = [rect.left + rect.width / 2, rect.top + rect.height / 2]
-      const [dx, dy] = [evt.x - x0, evt.y - y0]
-      hue.value = Math.floor(Math.atan(dy / dx) * 180 / Math.PI)
-      if (dx < 0) hue.value += 180
-      if (hue.value < 0) hue.value += 360
-      color.update({ hue: hue.value })
-    }
-    function handleSvDrag(event: MouseEvent) {
-      const el = svRef.value
-      if (!el) return
-      const rect = el.getBoundingClientRect()
-      const top = Math.min(Math.max(0, event.clientY - rect.top), rect.height)
-      const left = Math.min(Math.max(0, event.clientX - rect.left), rect.width)
-      const { width, height } = rect
-      color.update({
-        saturation: left / width * 100,
-        value: 100 - top / height * 100,
-      })
-    }
-    watch(() => props.modelValue, val => {
-      val && color.fromString(val)
-    })
-    watch(() => color.color, val => {
-      emit('update:modelValue', val)
-    })
-    watch([() => color.value, () => color.saturation], () => {
-      updateSv()
-    })
-    watch(() => color.hue, () => {
-      hue.value = color.hue
-    })
+  const el = svRef.value
+  if (!el) return
+  const { clientWidth: width, clientHeight: height } = el
+  const [left, top] = [saturation * width / 100, (100 - value) * height / 100]
+  const [x, y] = [left - width / 2, top - height / 2]
 
-    function updateSv() {
-      const { saturation, value } = color
+  svTransform.value = `translateX(${x}px) translateY(${y}px)`
+}
 
-      const el = svRef.value
-      if (!el) return
-      const { clientWidth: width, clientHeight: height } = el
-      const [left, top] = [saturation * width / 100, (100 - value) * height / 100]
-      const [x, y] = [left - width / 2, top - height / 2]
+function initializePopper() {
+  if (!visibility.value) return
+  popperInstance = createPopper(props.reference!, popperRef.value!, {
+    placement: 'bottom-start',
+    modifiers: [{
+      name: 'offset',
+      options: {
+        offset: [0, 4],
+      },
+    }],
+  })
+  popperInstance.update()
+}
+watch(visibility, initializePopper)
 
-      svTransform.value = `translateX(${x}px) translateY(${y}px)`
-    }
-
-    function initializePopper() {
-      if (!visibility.value) return
-      popperInstance = createPopper(reference.value!, popperRef.value!, {
-        placement: 'bottom-start',
-        modifiers: [{
-          name: 'offset',
-          options: {
-            offset: [0, 4],
-          },
-        }],
-      })
-      popperInstance.update()
-    }
-    watch(visibility, initializePopper)
-
-    onMounted(() => {
-      draggable(hueRef.value!, handleHueDrag)
-      draggable(svRef.value!, handleSvDrag)
-      updateSv()
-      initializePopper()
-    })
-    return {
-      popperRef,
-      hueRef,
-      svRef,
-
-      hue,
-      background,
-      svTransform,
-      color,
-    }
-  },
+onMounted(() => {
+  draggable(hueRef.value!, handleHueDrag)
+  draggable(svRef.value!, handleSvDrag)
+  updateSv()
+  initializePopper()
 })
 </script>
 

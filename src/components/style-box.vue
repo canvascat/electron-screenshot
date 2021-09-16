@@ -35,107 +35,78 @@
   </div>
 </template>
 
-<script lang="ts">
+<script lang="ts" setup>
 import { createPopper } from '@popperjs/core'
 import type { Instance as PopperInstance } from '@popperjs/core'
 import {
   computed,
-  defineComponent,
   onMounted,
   onUnmounted,
   ref,
-  toRefs,
-  watch,
+  toRef,
+  watch
 } from 'vue'
-import type { PropType } from 'vue'
 import { hsvFormatHex } from 'src/util/color'
 import { debounce, range } from 'lodash'
-import { ClickOutside } from 'src/directives'
+import { ClickOutside as VClickOutside } from 'src/directives'
 import ColorPick from './color-pick.vue'
 
 const COLORS = ['#000000', ...range(18).map(i => hsvFormatHex(20 * i)), '#ffffff']
 const WIDTHS = [2, 4, 6]
 
-export default defineComponent({
-  name: 'StyleBox',
+const props = withDefaults(defineProps<{
+  reference?: HTMLElement
+  visibility: boolean
+  color?: string
+  width?: number
+}>(), {
+  visibility: true
+})
+const emits = defineEmits<{
+  (e: 'update:color', value?: string): void
+  (e: 'update:width', value?: number): void
+}>()
 
-  directives: { ClickOutside },
+const visibility = toRef(props, 'visibility')
+const popperRef = ref<HTMLElement>()
 
-  components: { ColorPick },
+const refColor = computed({
+  get: () => props.color,
+  set: val => emits('update:color', val),
+})
+const colorPickVisibility = ref(false)
+let popperInstance: PopperInstance | undefined
 
-  props: {
-    reference: {
-      type: Object as PropType<Nullable<HTMLElement>>,
-      required: true,
-    },
-    visibility: {
-      type: Boolean,
-      default: true,
-    },
-    color: {
-      type: String,
-    },
-    width: {
-      type: Number,
-    },
-  },
+function initializePopper() {
+  if (!visibility.value) return
+  popperInstance = createPopper(props.reference!, popperRef.value!, {
+    placement: 'bottom-start',
+    modifiers: [{
+      name: 'offset',
+      options: {
+        offset: [0, 4],
+      },
+    }],
+  })
+  popperInstance.update()
+}
+function togglePicker(value = !colorPickVisibility.value) {
+  colorPickVisibility.value = value
+}
 
-  emits: ['update:color', 'update:width'],
+const debounceTogglePicker = debounce(togglePicker, 100)
 
-  setup(props, { emit }) {
-    const { visibility, reference } = toRefs(props)
-    const popperRef = ref(<RefElement>null)
-    // ref(<Nullable<ComponentPublicInstance>>null)
-    const refColor = computed({
-      get: () => props.color,
-      set: val => emit('update:color', val),
-    })
-    const colorPickVisibility = ref(false)
-    let popperInstance = <Nullable<PopperInstance>>null
+function hide() {
+  debounceTogglePicker(false)
+}
 
-    function initializePopper() {
-      if (!visibility.value) return
-      popperInstance = createPopper(reference.value!, popperRef.value!, {
-        placement: 'bottom-start',
-        modifiers: [{
-          name: 'offset',
-          options: {
-            offset: [0, 4],
-          },
-        }],
-      })
-      popperInstance.update()
-    }
-    function togglePicker(value = !colorPickVisibility.value) {
-      colorPickVisibility.value = value
-    }
-
-    const debounceTogglePicker = debounce(togglePicker, 100)
-
-    function hide() {
-      debounceTogglePicker(false)
-    }
-
-    watch(visibility, initializePopper)
-    onMounted(() => {
-      initializePopper()
-    })
-    onUnmounted(() => {
-      popperInstance?.destroy()
-    })
-
-    return {
-      COLORS,
-      WIDTHS,
-      colorPickVisibility,
-
-      popperRef,
-      refColor,
-
-      togglePicker,
-      hide,
-    }
-  },
+watch(visibility, initializePopper)
+onMounted(() => {
+  initializePopper()
+})
+onUnmounted(() => {
+  popperInstance?.destroy()
+  popperInstance = undefined
 })
 </script>
 
@@ -164,7 +135,7 @@ export default defineComponent({
   outline: 0;
   box-sizing: border-box;
   &::after {
-    content: '';
+    content: "";
     border-radius: 50%;
     background-color: #666;
     width: var(--size-width-height);

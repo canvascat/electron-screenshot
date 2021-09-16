@@ -1,6 +1,6 @@
 export type Point = [number, number]
 
-export type Path = Array<Point>
+export type Path = Point[]
 
 export type CaptureLayer = {
   x: number

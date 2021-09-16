@@ -257,24 +257,15 @@ export function downloadCanvas(
   link.click()
 }
 
-export const writeCanvasToClipboard = (canvas: HTMLCanvasElement) =>
-  navigator.permissions
-    .query({ name: <PermissionName>'clipboard-write' })
-    .then(async ({ state }) => {
-      if (state !== 'granted')
-        throw new Error('clipboard-permissoin not granted')
-      return canvasToBlob(canvas).then(blob => {
-        const { type } = blob
-        // const name = `导出图片${Date.now()}.${type.split('/').slice(-1)[0]}`
-        // const file = new File([blob], name, { type })
-        // const data = new DataTransfer();
-        // data.items.add(file)
-        // return navigator.clipboard.write(data).then(() => 'success', () => 'failure')
-        // https://stackoverflow.com/questions/58312058/navigator-clipboard-write-clipboard-iterator-getter-is-not-callable
-        // https://stackoverflow.com/questions/57278923/chrome-76-copy-content-to-clipboard-using-navigator
-        return navigator.clipboard.write([new ClipboardItem({ [type]: blob })])
-      })
-    })
+export async function writeCanvasToClipboard(canvas: HTMLCanvasElement) {
+  const { state } = await navigator.permissions.query({ name: <PermissionName>'clipboard-write' })
+  if (state !== 'granted') throw new Error('clipboard-permissoin not granted')
+  const blobPromise = canvasToBlob(canvas)
+  const blob = await blobPromise/* canvasToBlob(canvas) */
+  // https://stackoverflow.com/questions/58312058/navigator-clipboard-write-clipboard-iterator-getter-is-not-callable
+  // https://stackoverflow.com/questions/57278923/chrome-76-copy-content-to-clipboard-using-navigator
+  return navigator.clipboard.write([new ClipboardItem({ [blob.type]: blobPromise })])
+}
 
 export function updateCanvas(
   actionHistory: Array<ActionHistoryItem>,

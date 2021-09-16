@@ -1,4 +1,4 @@
-import { reactive, ref, shallowReactive } from 'vue'
+import { reactive, ref, shallowReactive, shallowRef } from 'vue'
 import type { ActionHistoryItem, Bound, ActionType, CaptureLayer, Point, ToolAction } from './type'
 import { DEFAULT_COLOR, DEFAULT_WIDTH } from './util/const'
 
@@ -13,17 +13,17 @@ export const bound: Bound = reactive({
 
 export const captureLayer: CaptureLayer = reactive({ x: -999, y: -999, h: 0, w: 0 })
 
-export const action = ref(<Nullable<ActionType>>null)
+export const action = ref<ActionType>()
 
-export const canvasRef = ref(null as Nullable<HTMLCanvasElement>)
+export const canvasRef = ref<HTMLCanvasElement>()
 
 export const actionHistory = shallowReactive(<Array<ActionHistoryItem>>[])
 
-export const drawBound = ref(<Nullable<Bound>>null)
+export const drawBound = ref<Bound>()
 
 export function updateDrawBound (ah = actionHistory) {
   if (ah.length === 0) {
-    drawBound.value = null
+    drawBound.value = undefined
     return
   }
   drawBound.value ??= {
@@ -39,7 +39,7 @@ export function updateDrawBound (ah = actionHistory) {
 }
 
 /** 绘制马赛克的图片原始像素数据 */
-export const mosaicOriginalPxData = ref(<Nullable<Uint8ClampedArray>>null)
+export const mosaicOriginalPxData = shallowRef<Uint8ClampedArray>()
 
 export const TOOL_ACTIONS: Array<ToolAction> = [
   { icon: 'A', label: '添加文字(TODO)', id: 'TEXT', cursor: 'text' },

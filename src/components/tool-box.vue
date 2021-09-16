@@ -6,9 +6,7 @@
       :class="['tool-item', action === t.id && 'active']"
       :title="t.label"
       @click="handleUpdateTool(t.id)"
-    >
-      {{ t.icon }}
-    </button>
+    >{{ t.icon }}</button>
     <div class="tool-divider"></div>
     <button
       v-for="t in OPT_ACTIONS"
@@ -16,9 +14,7 @@
       class="tool-item"
       :title="t.label"
       @click="handleExecCmd(t.id)"
-    >
-      {{ t.icon }}
-    </button>
+    >{{ t.icon }}</button>
   </div>
   <StyleBox
     v-if="currentTool?.attr"
@@ -28,7 +24,7 @@
   />
 </template>
 
-<script lang="ts">
+<script lang="ts" setup>
 import StyleBox from './style-box.vue'
 import {
   action,
@@ -53,19 +49,19 @@ import {
   writeCanvasToClipboard,
 } from 'src/util/canvas'
 import { addResizeListener, loadLocalImage, loadScreenCaptureImage, removeResizeListener } from 'src/util/dom'
-import { createNotification, rafThrottle } from 'src/util/util'
+import { createNotification } from 'src/util/util'
 import {
   computed,
-  defineComponent,
   onMounted,
   onUnmounted,
   reactive,
   ref,
 } from 'vue'
+import { throttle } from 'lodash'
 
 const OFFSET = { X: 0, Y: 6 }
 
-const OPT_ACTIONS: Array<CmdAction> = [
+const OPT_ACTIONS: CmdAction[] = [
   { icon: '↩', label: '撤销', id: 'RETURN' },
   { icon: '⚡', label: '更换底图(使用本地文件)', id: 'USE_UPLOAD_FILE' },
   { icon: '✂', label: '更换底图(使用屏幕快照)', id: 'USE_SCREEN_CAPTURE' },
@@ -74,122 +70,101 @@ const OPT_ACTIONS: Array<CmdAction> = [
   { icon: '✔', label: '确定(复制到剪切板)', id: 'CONFIRM' },
 ]
 
-export default defineComponent({
-  name: 'ToolBox',
+const emits = defineEmits<{
+  (e: 'dispatch', cmd: CmdActionType): void
+}>()
 
-  components: { StyleBox },
+const toolBoxRef = ref<HTMLDivElement>()
+const clientRect = reactive({ w: 0, h: 0 })
+const style = computed(() => {
+  const style = <{ [key: string]: string; }>{}
+  const visible = inited.value && action.value !== 'CREATE'
+  if (visible) {
+    const { x, y, w, h } = captureLayer
+    const top =
+      y + h + OFFSET.Y + clientRect.h + OFFSET.Y > bound.y.max
+        ? Math.max(y - clientRect.h - OFFSET.Y, bound.y.min)
+        : y + h + OFFSET.Y
+    const left = Math.max(
+      x + w - clientRect.w - OFFSET.X,
+      bound.x.min + OFFSET.X,
+    )
+    style.left = `${left}px`
+    style.top = `${top}px`
+  } else {
+    style.visibility = 'hidden'
+  }
+  return style
+})
+// const SHOW_STYLE_BOX_TOOL_IDS = ['LINE','RECT', 'ARROW', 'ELLIPSE', 'BRUSH']
+const currentTool = computed(() => TOOL_ACTIONS.find(({ id }) => id === action.value))
 
-  emits: ['dispatch'],
-
-  setup(props, context) {
-    const toolBoxRef = ref(<Nullable<HTMLDivElement>>null)
-    const clientRect = reactive({ w: 0, h: 0 })
-    const style = computed(() => {
-      const style = <{ [key: string]: string; }>{}
-      const visible = inited.value && action.value !== 'CREATE'
-      if (visible) {
-        const { x, y, w, h } = captureLayer
-        const top =
-          y + h + OFFSET.Y + clientRect.h + OFFSET.Y > bound.y.max
-            ? Math.max(y - clientRect.h - OFFSET.Y, bound.y.min)
-            : y + h + OFFSET.Y
-        const left = Math.max(
-          x + w - clientRect.w - OFFSET.X,
-          bound.x.min + OFFSET.X,
-        )
-        style.left = `${left}px`
-        style.top = `${top}px`
-      } else {
-        style.visibility = 'hidden'
-      }
-      return style
-    })
-    // const SHOW_STYLE_BOX_TOOL_IDS = ['LINE','RECT', 'ARROW', 'ELLIPSE', 'BRUSH']
-    const currentTool = computed(() => TOOL_ACTIONS.find(({ id }) => id === action.value))
-    const styleBoxVisibility = computed(() => currentTool.value?.attr)
-    const updateClientRect = rafThrottle(function() {
-      const { width: w, height: h } = toolBoxRef.value!.getBoundingClientRect()
-      Object.assign(clientRect, { w, h })
-    })
-    function handleExecCmd(cmd: CmdActionType) {
-      switch (cmd) {
-        case 'SAVE': {
-          const { x, y, w, h } = captureLayer
-          downloadCanvas(canvasRef.value!, x, y, w, h)
-          break
-        }
-        case 'CONFIRM': {
-          const { x, y, w, h } = captureLayer
-          writeCanvasToClipboard(copyCanvas(canvasRef.value!, x, y, w, h))
-            .then(() => {
-              createNotification({ body: '图片已复制' }, '提示')
-            }, err => {
-              createNotification({ body: err?.message ?? '图片复制失败' }, '提示')
-            })
-          break
-        }
-        case 'RETURN': {
-          if (actionHistory.length === 0) break
-          actionHistory.pop()
-          updateCanvas(actionHistory)
-          updateDrawBound()
-          break
-        }
-        case 'CANCEL': {
-          actionHistory.length = 1
-          handleExecCmd('RETURN')
-          Object.assign(captureLayer, { x: -999, y: -999, h: 0, w: 0 })
-          break
-        }
-        case 'USE_UPLOAD_FILE': {
-          const oldSrc = imageSource.src
-          loadLocalImage(imageSource).then(() => {
-            actionHistory.length = 0
-            updateCanvas(actionHistory)
-            URL.revokeObjectURL(oldSrc)
-          })
-          break
-        }
-        case 'USE_SCREEN_CAPTURE': {
-          const oldSrc = imageSource.src
-          loadScreenCaptureImage(imageSource).then(() => {
-            actionHistory.length = 0
-            updateCanvas(actionHistory)
-            URL.revokeObjectURL(oldSrc)
-          })
-          break
-        }
-        default:
-          console.log('TODO EXEC CMD => ', cmd)
-          return
-      }
-      context.emit('dispatch', cmd)
+const updateClientRect = throttle(function () {
+  const { width: w, height: h } = toolBoxRef.value!.getBoundingClientRect()
+  Object.assign(clientRect, { w, h })
+})
+function handleExecCmd(cmd: CmdActionType) {
+  switch (cmd) {
+    case 'SAVE': {
+      const { x, y, w, h } = captureLayer
+      downloadCanvas(canvasRef.value!, x, y, w, h)
+      break
     }
-    function handleUpdateTool(tool: ToolActionType) {
-      action.value = action.value === tool ? null : tool
+    case 'CONFIRM': {
+      const { x, y, w, h } = captureLayer
+      writeCanvasToClipboard(copyCanvas(canvasRef.value!, x, y, w, h))
+        .then(() => {
+          createNotification({ body: '图片已复制' }, '提示')
+        }, err => {
+          createNotification({ body: err?.message ?? '图片复制失败' }, '提示')
+        })
+      break
     }
-    onMounted(() => {
-      addResizeListener(toolBoxRef.value as any, updateClientRect)
-    })
-    onUnmounted(() => {
-      removeResizeListener(toolBoxRef.value as any, updateClientRect)
-    })
-
-    return {
-      TOOL_ACTIONS,
-      OPT_ACTIONS,
-
-      style,
-      action,
-      styleBoxVisibility,
-      currentTool,
-
-      handleExecCmd,
-      handleUpdateTool,
-
-      toolBoxRef,
+    case 'RETURN': {
+      if (actionHistory.length === 0) break
+      actionHistory.pop()
+      updateCanvas(actionHistory)
+      updateDrawBound()
+      break
     }
-  },
+    case 'CANCEL': {
+      actionHistory.length = 1
+      handleExecCmd('RETURN')
+      Object.assign(captureLayer, { x: -999, y: -999, h: 0, w: 0 })
+      break
+    }
+    case 'USE_UPLOAD_FILE': {
+      const oldSrc = imageSource.src
+      loadLocalImage(imageSource).then(() => {
+        actionHistory.length = 0
+        updateCanvas(actionHistory)
+        URL.revokeObjectURL(oldSrc)
+      })
+      break
+    }
+    case 'USE_SCREEN_CAPTURE': {
+      const oldSrc = imageSource.src
+      loadScreenCaptureImage(imageSource).then(() => {
+        actionHistory.length = 0
+        updateCanvas(actionHistory)
+        URL.revokeObjectURL(oldSrc)
+      })
+      break
+    }
+    default:
+      console.log('TODO EXEC CMD => ', cmd)
+      return
+  }
+  emits('dispatch', cmd)
+}
+function handleUpdateTool(tool: ToolActionType) {
+  action.value = action.value === tool ? undefined : tool
+}
+onMounted(() => {
+  addResizeListener(toolBoxRef.value as any, updateClientRect)
+})
+onUnmounted(() => {
+  removeResizeListener(toolBoxRef.value as any, updateClientRect)
 })
 </script>
 
