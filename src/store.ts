@@ -17,7 +17,7 @@ export const action = ref<ActionType>()
 
 export const canvasRef = ref<HTMLCanvasElement>()
 
-export const actionHistory = shallowReactive(<Array<ActionHistoryItem>>[])
+export const actionHistory = shallowReactive<ActionHistoryItem[]>([])
 
 export const drawBound = ref<Bound>()
 

@@ -5,7 +5,7 @@
 </p>
 <p align="center">
   <img alt="vue next" src="https://img.shields.io/github/package-json/dependency-version/canvascat/electron-screenshot/vue?logo=vue3">
-  <img src="https://img.shields.io/badge/vite-^2.0.0-646cff.svg">
+  <img src="https://img.shields.io/badge/vite-^2.5.4-646cff.svg" alt="vite^2.5.4">
   <img src="https://img.shields.io/github/license/canvascat/electron-screenshot" alt="GitHub license">
 </p>
 <br/>
