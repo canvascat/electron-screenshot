@@ -10,10 +10,15 @@ jobs:
       - name: Checkout 🛎️
         uses: actions/checkout@main
 
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2.2.2
+        with:
+          version: 7.12.2
+
       - name: Install and Build 🔧
         run: |
-          yarn
-          yarn build
+          pnpm
+          pnpm build
 
       - name: Deploy 🚀
         uses: JamesIves/github-pages-deploy-action@4.0.0
