@@ -1,32 +1,16 @@
 <template>
   <div ref="toolBoxRef" class="tool-box" :style="style">
-    <button
-      v-for="t in TOOL_ACTIONS"
-      :key="t.id"
-      :class="['tool-item', action === t.id && 'active']"
-      :title="t.label"
-      @click="handleUpdateTool(t.id)"
-    >
+    <button v-for="t in TOOL_ACTIONS" :key="t.id" :class="['tool-item', action === t.id && 'active']" :title="t.label"
+      @click="handleUpdateTool(t.id)">
       {{ t.icon }}
     </button>
     <div class="tool-divider"></div>
-    <button
-      v-for="t in OPT_ACTIONS"
-      :key="t.id"
-      class="tool-item"
-      :title="t.label"
-      @click="handleExecCmd(t.id)"
-    >
+    <button v-for="t in OPT_ACTIONS" :key="t.id" class="tool-item" :title="t.label" @click="handleExecCmd(t.id)">
       {{ t.icon }}
     </button>
   </div>
-  <StyleBox
-    v-if="showStyleBox"
-    :visibility="showStyleBox"
-    v-model:color="currentTool!.attr!.color"
-    v-model:width="currentTool!.attr!.width"
-    :reference="toolBoxRef"
-  />
+  <StyleBox v-if="showStyleBox" :visibility="showStyleBox" v-model:color="currentTool!.attr!.color"
+    v-model:width="currentTool!.attr!.width" :reference="toolBoxRef" />
 </template>
 
 <script lang="ts" setup>
@@ -41,21 +25,21 @@ import {
   initialized,
   TOOL_ACTIONS,
   updateDrawBound,
-} from 'src/store';
-import type { CmdAction, CmdActionType, ToolActionType } from 'src/type';
+} from '@/store';
+import type { CmdAction, CmdActionType, ToolActionType } from '@/type';
 import {
   copyCanvas,
   downloadCanvas,
   updateCanvas,
   writeCanvasToClipboard,
-} from 'src/util/canvas';
+} from '@/util/canvas';
 import {
   addResizeListener,
   loadLocalImage,
   loadScreenCaptureImage,
   removeResizeListener,
-} from 'src/util/dom';
-import { createNotification } from 'src/util/util';
+} from '@/util/dom';
+import { createNotification } from '@/util/util';
 import {
   computed,
   onMounted,

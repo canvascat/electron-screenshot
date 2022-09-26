@@ -1,8 +1,8 @@
 <script lang="ts" setup>
 import { computed, onMounted, reactive, ref, toRef, watch } from 'vue';
 // import type { PropType } from 'vue'
-import { draggable } from 'src/util/draggable';
-import Color from 'src/util/color';
+import { draggable } from '@/util/draggable';
+import Color from '@/util/color';
 import { createPopper } from '@popperjs/core';
 import type { Instance as PopperInstance } from '@popperjs/core';
 // The extension for the file (.vue) is non-standard. You should add "parserOptions.extraFileExtensions" to your config.
@@ -124,20 +124,13 @@ onMounted(() => {
   <div ref="popperRef" class="color-picker flex-conter">
     <div ref="hueRef" class="hue-bar" />
     <div class="color-svpanel__wrap flex-conter">
-      <div
-        ref="svRef"
-        class="color-svpanel flex-conter"
-        :style="{ backgroundColor: background }"
-      >
+      <div ref="svRef" class="color-svpanel flex-conter" :style="{ backgroundColor: background }">
         <div class="color-svpanel__white" />
         <div class="color-svpanel__black" />
         <div class="sv__cursor" :style="{ transform: svTransform }" />
       </div>
     </div>
-    <div
-      class="hue__cursor"
-      :style="{ transform: `translateX(81px) rotate(${hue}deg)` }"
-    />
+    <div class="hue__cursor" :style="{ transform: `translateX(81px) rotate(${hue}deg)` }" />
   </div>
 </template>
 
@@ -160,16 +153,14 @@ onMounted(() => {
     height: 180px;
     position: absolute;
     border-radius: 50%;
-    background: conic-gradient(
-      from 0.25turn at 50% 50%,
-      red 0,
-      #ff0 17%,
-      #0f0 33%,
-      #0ff 50%,
-      #00f 67%,
-      #f0f 83%,
-      red
-    );
+    background: conic-gradient(from 0.25turn at 50% 50%,
+        red 0,
+        #ff0 17%,
+        #0f0 33%,
+        #0ff 50%,
+        #00f 67%,
+        #f0f 83%,
+        red);
   }
 }
 

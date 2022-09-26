@@ -1,36 +1,14 @@
 <template>
   <div ref="popperRef" class="style-box">
     <template v-if="width">
-      <button
-        v-for="w in WIDTHS"
-        :key="w"
-        :class="['width__button', w === width && 'active']"
-        :style="`--size-width-height: ${w}px;`"
-        @click="$emit('update:width', w)"
-      ></button>
+      <button v-for="w in WIDTHS" :key="w" :class="['width__button', w === width && 'active']"
+        :style="`--size-width-height: ${w}px;`" @click="$emit('update:width', w)"></button>
     </template>
     <div v-if="color" class="color-box">
-      <button
-        class="select-color"
-        :style="{ backgroundColor: color }"
-        :title="color"
-        @click="togglePicker()"
-      ></button>
-      <button
-        v-for="c in COLORS"
-        :key="c"
-        :title="c"
-        class="color__button"
-        :style="{ backgroundColor: c }"
-        :data-color="c"
-        @click="$emit('update:color', c)"
-      ></button>
-      <color-pick
-        v-if="colorPickVisibility"
-        v-model="refColor"
-        v-click-outside="hide"
-        :reference="popperRef"
-      />
+      <button class="select-color" :style="{ backgroundColor: color }" :title="color" @click="togglePicker()"></button>
+      <button v-for="c in COLORS" :key="c" :title="c" class="color__button" :style="{ backgroundColor: c }"
+        :data-color="c" @click="$emit('update:color', c)"></button>
+      <color-pick v-if="colorPickVisibility" v-model="refColor" v-click-outside="hide" :reference="popperRef" />
     </div>
   </div>
 </template>
@@ -39,9 +17,9 @@
 import { createPopper } from '@popperjs/core';
 import type { Instance as PopperInstance } from '@popperjs/core';
 import { computed, onMounted, onUnmounted, ref, toRef, watch } from 'vue';
-import { hsvFormatHex } from 'src/util/color';
+import { hsvFormatHex } from '@/util/color';
 import { debounce, range } from 'lodash';
-import { ClickOutside as VClickOutside } from 'src/directives';
+import { ClickOutside as VClickOutside } from '@/directives';
 import ColorPick from './color-pick.vue';
 
 const COLORS = [
@@ -125,6 +103,7 @@ onUnmounted(() => {
   user-select: none;
   cursor: default;
 }
+
 .width__button {
   width: 24px;
   height: 24px;
@@ -136,6 +115,7 @@ onUnmounted(() => {
   border: 1px solid transparent;
   outline: 0;
   box-sizing: border-box;
+
   &::after {
     content: '';
     border-radius: 50%;
@@ -143,21 +123,25 @@ onUnmounted(() => {
     width: var(--size-width-height);
     height: var(--size-width-height);
   }
+
   &:hover {
     background-color: #f7f7f7;
     border-color: #aaa;
   }
+
   &.active {
     background-color: #ededed;
     border-color: #999;
   }
 }
+
 .color-box {
   display: grid;
   grid-template-columns: repeat(auto-fill, 16px);
   width: 192px;
   height: 32px;
 }
+
 .select-color {
   grid-column: 1 / span 2;
   grid-row: 1 / span 2;
@@ -168,6 +152,7 @@ onUnmounted(() => {
   box-sizing: border-box;
   border-radius: 0;
 }
+
 .color__button {
   width: 12px;
   height: 12px;
@@ -177,6 +162,7 @@ onUnmounted(() => {
   box-sizing: border-box;
   outline: 0;
   border-radius: 0;
+
   &:hover {
     transform: scaleX(1.2) scaleY(1.2);
   }

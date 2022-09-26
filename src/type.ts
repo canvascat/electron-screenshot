@@ -51,19 +51,19 @@ export interface Action {
   label: string;
 }
 
-export type ToolAction = {
+export interface ToolAction extends Action {
   id: ToolActionType;
   cursor?: string;
   attr?: ToolAttr;
-} & Action;
+}
 
-export type CmdAction = {
+export interface CmdAction extends Action {
   id: CmdActionType;
-} & Action;
+}
 
-export type CaptureAction = {
+export interface CaptureAction extends Action {
   id: CaptureActionType;
-} & Action;
+}
 
 export interface ActionHistoryItem {
   id: ToolActionType;

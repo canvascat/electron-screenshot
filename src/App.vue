@@ -12,9 +12,9 @@ import {
   initialized,
   mosaicOriginalPxData,
   updateDrawBound,
-} from 'src/store';
-import InfoBox from 'src/components/info-box.vue';
-import ToolBox from 'src/components/tool-box.vue';
+} from '@/store';
+import InfoBox from '@/components/info-box.vue';
+import ToolBox from '@/components/tool-box.vue';
 import type {
   ActionHistoryItem,
   CmdActionType,
@@ -22,16 +22,16 @@ import type {
   ResizePoint,
   ResizePointPosition,
   ToolActionType,
-} from 'src/type';
+} from '@/type';
 import {
   addResizeListener,
   createCSSRule,
   createStyleSheet,
   once,
   removeResizeListener,
-} from 'src/util/dom';
+} from '@/util/dom';
 import { cloneDeep, isEqual, throttle } from 'lodash';
-import { createMosaicData, updateCanvas } from 'src/util/canvas';
+import { createMosaicData, updateCanvas } from '@/util/canvas';
 import { CAPTURE_ACTION_IDS, TOOL_ACTION_IDS } from './util/const';
 
 const RESIZE_POINTS: ResizePoint[] = [
@@ -310,28 +310,14 @@ onUnmounted(() => {
 <template>
   <div ref="wrapRef" class="wrapper">
     <canvas ref="canvasRef" :width="bound.x.max" :height="bound.y.max"></canvas>
-    <div
-      class="capture-layer"
-      :style="captureLayerStyle"
-      @mousedown.left="onMousedownCaptureLayer"
-    >
-      <button
-        v-for="p in RESIZE_POINTS"
-        :key="p.position.join()"
-        :style="
-          p.position.reduce((o, p) => Object.assign(o, { [p]: '-3px' }), {
-            cursor: p.cursor,
-          })
-        "
-        class="resize-point"
-        @mousedown.left.prevent="startResize($event, p)"
-      ></button>
+    <div class="capture-layer" :style="captureLayerStyle" @mousedown.left="onMousedownCaptureLayer">
+      <button v-for="p in RESIZE_POINTS" :key="p.position.join()" :style="
+        p.position.reduce((o, p) => Object.assign(o, { [p]: '-3px' }), {
+          cursor: p.cursor,
+        })
+      " class="resize-point" @mousedown.left.prevent="startResize($event, p)"></button>
     </div>
-    <info-box
-      v-if="infoBoxVisible"
-      :mouse-point="mousePoint"
-      :canvas="canvasRef"
-    >
+    <info-box v-if="infoBoxVisible" :mouse-point="mousePoint" :canvas="canvasRef">
       <p>{{ captureLayer.w }} x {{ captureLayer.h }}</p>
       <p>RGB({{ RGB }})</p>
     </info-box>
@@ -340,7 +326,7 @@ onUnmounted(() => {
 </template>
 
 <style lang="scss">
-body > img {
+#app>img {
   position: fixed;
   top: 0;
   left: 0;
@@ -348,7 +334,7 @@ body > img {
   display: none;
 }
 
-#app {
+body {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -364,7 +350,7 @@ body > img {
   height: 100vh;
   overflow: hidden;
 
-  > canvas {
+  >canvas {
     position: absolute;
     top: 0;
     left: 0;

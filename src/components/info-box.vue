@@ -16,8 +16,8 @@
 
 <script lang="ts" setup>
 import { computed, ref, watch, toRef, type CSSProperties } from 'vue';
-import { bound } from 'src/store';
-import type { Point } from 'src/type';
+import { bound } from '@/store';
+import type { Point } from '@/type';
 import { throttle } from 'lodash';
 
 const SIZE = 120;
@@ -75,12 +75,12 @@ watch(
   box-sizing: border-box;
   position: relative;
 
-  > canvas {
+  >canvas {
     width: 100%;
     height: 100%;
   }
 
-  > svg {
+  >svg {
     position: absolute;
     top: 0;
     left: 0;

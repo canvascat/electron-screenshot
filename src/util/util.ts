@@ -1,4 +1,4 @@
-import type { Point } from 'src/type';
+import type { Point } from '@/type';
 import { canvasToBlob } from './canvas';
 
 export const sleep = (t = 0) =>

@@ -1,4 +1,4 @@
-import { on } from 'src/util/dom';
+import { on } from '@/util/dom';
 import type {
   ComponentPublicInstance,
   DirectiveBinding,

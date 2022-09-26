@@ -1,4 +1,5 @@
-import { default as Color } from 'src/util/color';
+import { describe, it, expect } from 'vitest';
+import Color from 'src/util/color';
 
 describe('color', () => {
   const color = new Color({ color: '#FF0000', format: 'rgb' });

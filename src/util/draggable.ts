@@ -1,5 +1,5 @@
 import { throttle } from 'lodash';
-import { on, off } from 'src/util/dom';
+import { on, off } from '@/util/dom';
 
 let isDragging = false;
 

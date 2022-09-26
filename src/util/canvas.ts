@@ -1,5 +1,5 @@
-import { bound, canvasRef, imageSource, mosaicOriginalPxData } from 'src/store';
-import { ActionHistoryItem, Point } from 'src/type';
+import { bound, canvasRef, imageSource, mosaicOriginalPxData } from '@/store';
+import type { ActionHistoryItem, Point } from '@/type';
 import { DEFAULT_COLOR, DEFAULT_WIDTH } from './const';
 
 /** PI/6 */
@@ -143,9 +143,9 @@ export function createMosaicData(ctx: CanvasRenderingContext2D, size = 10) {
       sumB = 0,
       total = 0;
     for (let y = sy * size; y < Math.min((sy + 1) * size, height); y++) {
-      const stratY = y * width;
+      const startY = y * width;
       for (let x = sx * size; x < Math.min((sx + 1) * size, width); x++) {
-        let sIndex = (stratY + x) << 2;
+        let sIndex = (startY + x) << 2;
         sumR += data[sIndex++];
         sumG += data[sIndex++];
         sumB += data[sIndex];
@@ -269,9 +269,9 @@ export function downloadCanvas(
 
 export async function writeCanvasToClipboard(canvas: HTMLCanvasElement) {
   const { state } = await navigator.permissions.query({
-    name: <PermissionName>'clipboard-write',
+    name: 'clipboard-write' as PermissionName,
   });
-  if (state !== 'granted') throw new Error('clipboard-permissoin not granted');
+  if (state !== 'granted') throw new Error('clipboard-permission not granted');
   const blobPromise = canvasToBlob(canvas);
   const blob = await blobPromise; /* canvasToBlob(canvas) */
   // https://stackoverflow.com/questions/58312058/navigator-clipboard-write-clipboard-iterator-getter-is-not-callable
@@ -311,7 +311,7 @@ export function updateCanvas(
         drawEllipse(ctx, startPoint, endPoint, width, color);
         break;
       }
-      // TODO: 当path.length较长，绘制会出现卡顿，使用snapshoot
+      // TODO: 当path.length较长，绘制会出现卡顿，使用snapshot
       case 'BRUSH':
         drawCurve(ctx, item.path!, width, color);
         break;
