@@ -15,45 +15,48 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, ref, toRefs, watch, toRef } from 'vue'
-import { bound } from 'src/store'
-import { Point } from 'src/type'
-import { throttle } from 'lodash'
+import { computed, ref, watch, toRef, type CSSProperties } from 'vue';
+import { bound } from 'src/store';
+import type { Point } from 'src/type';
+import { throttle } from 'lodash';
 
-const SIZE = 120
-const OFFSET = { X: 10, Y: 10 }
-const ZOOM_FACTOR = 4
-const [DW, DH] = [120, 88]
-const [SW, SH] = [DW / ZOOM_FACTOR, DH / ZOOM_FACTOR]
+const SIZE = 120;
+const OFFSET = { X: 10, Y: 10 };
+const ZOOM_FACTOR = 4;
+const [DW, DH] = [120, 88];
+const [SW, SH] = [DW / ZOOM_FACTOR, DH / ZOOM_FACTOR];
 
 const props = defineProps<{
-  mousePoint?: Point,
-  canvas?: HTMLCanvasElement
-}>()
-const mousePoint = toRef(props, 'mousePoint')
+  mousePoint?: Point;
+  canvas?: HTMLCanvasElement;
+}>();
+const mousePoint = toRef(props, 'mousePoint');
 
-const canvasRef = ref<HTMLCanvasElement>()
+const canvasRef = ref<HTMLCanvasElement>();
 const style = computed(() => {
-  const style = <{ [key: string]: string; }>{}
+  const style: CSSProperties = {};
   if (mousePoint?.value) {
-    const [x, y] = mousePoint.value
-    const [w, h] = [OFFSET.X + SIZE, OFFSET.Y + SIZE]
-    const left = x + w > bound.x.max ? x - w : x + OFFSET.X
-    const top = y + h > bound.y.max ? y - h : y + OFFSET.Y
-    style.left = `${left}px`
-    style.top = `${top}px`
+    const [x, y] = mousePoint.value;
+    const [w, h] = [OFFSET.X + SIZE, OFFSET.Y + SIZE];
+    const left = x + w > bound.x.max ? x - w : x + OFFSET.X;
+    const top = y + h > bound.y.max ? y - h : y + OFFSET.Y;
+    style.left = `${left}px`;
+    style.top = `${top}px`;
   }
-  return style
-})
+  return style;
+});
 
-watch(mousePoint, throttle((point) => {
-  const { canvas } = props
-  if (!point || !canvas || !canvasRef.value) return
-  const [x, y] = point
-  const ctx = canvasRef.value.getContext('2d')!
-  ctx.clearRect(0, 0, DW, DH)
-  ctx.drawImage(canvas, x - SW / 2, y - SH / 2, SW, SH, 0, 0, DW, DH)
-}))
+watch(
+  mousePoint,
+  throttle((point) => {
+    const { canvas } = props;
+    if (!point || !canvas || !canvasRef.value) return;
+    const [x, y] = point;
+    const ctx = canvasRef.value.getContext('2d')!;
+    ctx.clearRect(0, 0, DW, DH);
+    ctx.drawImage(canvas, x - SW / 2, y - SH / 2, SW, SH, 0, 0, DW, DH);
+  })
+);
 </script>
 
 <style lang="scss" scoped>
@@ -65,15 +68,18 @@ watch(mousePoint, throttle((point) => {
   position: absolute;
   z-index: 2;
 }
+
 .capture-info__view {
   // border: 2px solid #fff;
   height: 88px;
   box-sizing: border-box;
   position: relative;
+
   > canvas {
     width: 100%;
     height: 100%;
   }
+
   > svg {
     position: absolute;
     top: 0;
@@ -83,6 +89,7 @@ watch(mousePoint, throttle((point) => {
     opacity: 0.8;
   }
 }
+
 .capture-info__p {
   height: 32px;
   color: #fff;

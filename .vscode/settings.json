@@ -1,4 +1,7 @@
 {
-  "volar.tsPlugin": true,
-  "volar.tsPluginStatus": false
+  "prettier.enable": false,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": true
+  },
+  "volar.autoCompleteRefs": true
 }

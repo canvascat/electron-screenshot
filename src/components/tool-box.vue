@@ -6,7 +6,9 @@
       :class="['tool-item', action === t.id && 'active']"
       :title="t.label"
       @click="handleUpdateTool(t.id)"
-    >{{ t.icon }}</button>
+    >
+      {{ t.icon }}
+    </button>
     <div class="tool-divider"></div>
     <button
       v-for="t in OPT_ACTIONS"
@@ -14,18 +16,21 @@
       class="tool-item"
       :title="t.label"
       @click="handleExecCmd(t.id)"
-    >{{ t.icon }}</button>
+    >
+      {{ t.icon }}
+    </button>
   </div>
   <StyleBox
-    v-if="currentTool?.attr"
-    v-model:color="currentTool.attr.color"
-    v-model:width="currentTool.attr.width"
+    v-if="showStyleBox"
+    :visibility="showStyleBox"
+    v-model:color="currentTool!.attr!.color"
+    v-model:width="currentTool!.attr!.width"
     :reference="toolBoxRef"
   />
 </template>
 
 <script lang="ts" setup>
-import StyleBox from './style-box.vue'
+import StyleBox from './style-box.vue';
 import {
   action,
   actionHistory,
@@ -33,33 +38,35 @@ import {
   canvasRef,
   captureLayer,
   imageSource,
-  inited,
+  initialized,
   TOOL_ACTIONS,
   updateDrawBound,
-} from 'src/store'
-import type {
-  CmdAction,
-  CmdActionType,
-  ToolActionType,
-} from 'src/type'
+} from 'src/store';
+import type { CmdAction, CmdActionType, ToolActionType } from 'src/type';
 import {
   copyCanvas,
   downloadCanvas,
   updateCanvas,
   writeCanvasToClipboard,
-} from 'src/util/canvas'
-import { addResizeListener, loadLocalImage, loadScreenCaptureImage, removeResizeListener } from 'src/util/dom'
-import { createNotification } from 'src/util/util'
+} from 'src/util/canvas';
+import {
+  addResizeListener,
+  loadLocalImage,
+  loadScreenCaptureImage,
+  removeResizeListener,
+} from 'src/util/dom';
+import { createNotification } from 'src/util/util';
 import {
   computed,
   onMounted,
   onUnmounted,
   reactive,
   ref,
-} from 'vue'
-import { throttle } from 'lodash'
+  type CSSProperties,
+} from 'vue';
+import { throttle } from 'lodash';
 
-const OFFSET = { X: 0, Y: 6 }
+const OFFSET = { X: 0, Y: 6 };
 
 const OPT_ACTIONS: CmdAction[] = [
   { icon: '↩', label: '撤销', id: 'RETURN' },
@@ -68,104 +75,109 @@ const OPT_ACTIONS: CmdAction[] = [
   { icon: '⬇', label: '保存(下载图片)', id: 'SAVE' },
   { icon: '❌', label: '取消', id: 'CANCEL' },
   { icon: '✔', label: '确定(复制到剪切板)', id: 'CONFIRM' },
-]
+];
 
 const emits = defineEmits<{
-  (e: 'dispatch', cmd: CmdActionType): void
-}>()
+  (e: 'dispatch', cmd: CmdActionType): void;
+}>();
 
-const toolBoxRef = ref<HTMLDivElement>()
-const clientRect = reactive({ w: 0, h: 0 })
+const toolBoxRef = ref<HTMLDivElement>();
+const clientRect = reactive({ w: 0, h: 0 });
 const style = computed(() => {
-  const style = <{ [key: string]: string; }>{}
-  const visible = inited.value && action.value !== 'CREATE'
+  const style: CSSProperties = {};
+  const visible = initialized.value && action.value !== 'CREATE';
   if (visible) {
-    const { x, y, w, h } = captureLayer
+    const { x, y, w, h } = captureLayer;
     const top =
       y + h + OFFSET.Y + clientRect.h + OFFSET.Y > bound.y.max
         ? Math.max(y - clientRect.h - OFFSET.Y, bound.y.min)
-        : y + h + OFFSET.Y
+        : y + h + OFFSET.Y;
     const left = Math.max(
       x + w - clientRect.w - OFFSET.X,
-      bound.x.min + OFFSET.X,
-    )
-    style.left = `${left}px`
-    style.top = `${top}px`
+      bound.x.min + OFFSET.X
+    );
+    style.left = `${left}px`;
+    style.top = `${top}px`;
   } else {
-    style.visibility = 'hidden'
+    style.visibility = 'hidden';
   }
-  return style
-})
+  return style;
+});
 // const SHOW_STYLE_BOX_TOOL_IDS = ['LINE','RECT', 'ARROW', 'ELLIPSE', 'BRUSH']
-const currentTool = computed(() => TOOL_ACTIONS.find(({ id }) => id === action.value))
+const currentTool = computed(() =>
+  TOOL_ACTIONS.find(({ id }) => id === action.value)
+);
+const showStyleBox = computed(() => !!currentTool.value?.attr);
 
 const updateClientRect = throttle(function () {
-  const { width: w, height: h } = toolBoxRef.value!.getBoundingClientRect()
-  Object.assign(clientRect, { w, h })
-})
+  const { width: w, height: h } = toolBoxRef.value!.getBoundingClientRect();
+  Object.assign(clientRect, { w, h });
+});
 function handleExecCmd(cmd: CmdActionType) {
   switch (cmd) {
     case 'SAVE': {
-      const { x, y, w, h } = captureLayer
-      downloadCanvas(canvasRef.value!, x, y, w, h)
-      break
+      const { x, y, w, h } = captureLayer;
+      downloadCanvas(canvasRef.value!, x, y, w, h);
+      break;
     }
     case 'CONFIRM': {
-      const { x, y, w, h } = captureLayer
-      writeCanvasToClipboard(copyCanvas(canvasRef.value!, x, y, w, h))
-        .then(() => {
-          createNotification({ body: '图片已复制' }, '提示')
-        }, err => {
-          createNotification({ body: err?.message ?? '图片复制失败' }, '提示')
-        })
-      break
+      const { x, y, w, h } = captureLayer;
+      writeCanvasToClipboard(copyCanvas(canvasRef.value!, x, y, w, h)).then(
+        () => {
+          createNotification({ body: '图片已复制' }, '提示');
+        },
+        (err) => {
+          createNotification({ body: err?.message ?? '图片复制失败' }, '提示');
+        }
+      );
+      break;
     }
     case 'RETURN': {
-      if (actionHistory.length === 0) break
-      actionHistory.pop()
-      updateCanvas(actionHistory)
-      updateDrawBound()
-      break
+      if (actionHistory.length === 0) break;
+      actionHistory.pop();
+      updateCanvas(actionHistory);
+      updateDrawBound();
+      break;
     }
     case 'CANCEL': {
-      actionHistory.length = 1
-      handleExecCmd('RETURN')
-      Object.assign(captureLayer, { x: -999, y: -999, h: 0, w: 0 })
-      break
+      actionHistory.length = 1;
+      handleExecCmd('RETURN');
+      Object.assign(captureLayer, { x: -999, y: -999, h: 0, w: 0 });
+      break;
     }
     case 'USE_UPLOAD_FILE': {
-      const oldSrc = imageSource.src
+      const oldSrc = imageSource.src;
       loadLocalImage(imageSource).then(() => {
-        actionHistory.length = 0
-        updateCanvas(actionHistory)
-        URL.revokeObjectURL(oldSrc)
-      })
-      break
+        actionHistory.length = 0;
+        updateCanvas(actionHistory);
+        URL.revokeObjectURL(oldSrc);
+      });
+      break;
     }
     case 'USE_SCREEN_CAPTURE': {
-      const oldSrc = imageSource.src
+      const oldSrc = imageSource.src;
       loadScreenCaptureImage(imageSource).then(() => {
-        actionHistory.length = 0
-        updateCanvas(actionHistory)
-        URL.revokeObjectURL(oldSrc)
-      })
-      break
+        actionHistory.length = 0;
+        updateCanvas(actionHistory);
+        URL.revokeObjectURL(oldSrc);
+      });
+      break;
     }
     default:
-      console.log('TODO EXEC CMD => ', cmd)
-      return
+      console.log('TODO EXEC CMD => ', cmd);
+      return;
   }
-  emits('dispatch', cmd)
+  emits('dispatch', cmd);
 }
 function handleUpdateTool(tool: ToolActionType) {
-  action.value = action.value === tool ? undefined : tool
+  action.value = action.value === tool ? undefined : tool;
 }
 onMounted(() => {
-  addResizeListener(toolBoxRef.value as any, updateClientRect)
-})
+  addResizeListener(toolBoxRef.value as any, updateClientRect);
+});
 onUnmounted(() => {
-  removeResizeListener(toolBoxRef.value as any, updateClientRect)
-})
+  removeResizeListener(toolBoxRef.value as any, updateClientRect);
+});
 </script>
 
 <style lang="scss">
@@ -180,6 +192,7 @@ onUnmounted(() => {
   user-select: none;
   cursor: default;
 }
+
 .tool-item {
   height: 24px;
   width: 24px;
@@ -193,15 +206,18 @@ onUnmounted(() => {
   border: 1px solid transparent;
   background-color: transparent;
   outline: 0;
+
   &:hover {
     background-color: #f7f7f7;
     border-color: #aaa;
   }
+
   &.active {
     background-color: #ededed;
     border-color: #999;
   }
 }
+
 .tool-divider {
   height: 24px;
   width: 1px;

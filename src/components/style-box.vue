@@ -36,78 +36,80 @@
 </template>
 
 <script lang="ts" setup>
-import { createPopper } from '@popperjs/core'
-import type { Instance as PopperInstance } from '@popperjs/core'
-import {
-  computed,
-  onMounted,
-  onUnmounted,
-  ref,
-  toRef,
-  watch
-} from 'vue'
-import { hsvFormatHex } from 'src/util/color'
-import { debounce, range } from 'lodash'
-import { ClickOutside as VClickOutside } from 'src/directives'
-import ColorPick from './color-pick.vue'
+import { createPopper } from '@popperjs/core';
+import type { Instance as PopperInstance } from '@popperjs/core';
+import { computed, onMounted, onUnmounted, ref, toRef, watch } from 'vue';
+import { hsvFormatHex } from 'src/util/color';
+import { debounce, range } from 'lodash';
+import { ClickOutside as VClickOutside } from 'src/directives';
+import ColorPick from './color-pick.vue';
 
-const COLORS = ['#000000', ...range(18).map(i => hsvFormatHex(20 * i)), '#ffffff']
-const WIDTHS = [2, 4, 6]
+const COLORS = [
+  '#000000',
+  ...range(18).map((i) => hsvFormatHex(20 * i)),
+  '#ffffff',
+];
+const WIDTHS = [2, 4, 6];
 
-const props = withDefaults(defineProps<{
-  reference?: HTMLElement
-  visibility: boolean
-  color?: string
-  width?: number
-}>(), {
-  visibility: true
-})
+const props = withDefaults(
+  defineProps<{
+    reference?: HTMLElement;
+    visibility: boolean;
+    color?: string;
+    width?: number;
+  }>(),
+  {
+    visibility: true,
+  }
+);
 const emits = defineEmits<{
-  (e: 'update:color', value?: string): void
-  (e: 'update:width', value?: number): void
-}>()
+  (e: 'update:color', value?: string): void;
+  (e: 'update:width', value?: number): void;
+}>();
 
-const visibility = toRef(props, 'visibility')
-const popperRef = ref<HTMLElement>()
+const visibility = toRef(props, 'visibility');
+const popperRef = ref<HTMLElement>();
 
 const refColor = computed({
   get: () => props.color,
-  set: val => emits('update:color', val),
-})
-const colorPickVisibility = ref(false)
-let popperInstance: PopperInstance | undefined
+  set: (val) => emits('update:color', val),
+});
+const colorPickVisibility = ref(false);
+let popperInstance: PopperInstance | undefined;
 
 function initializePopper() {
-  if (!visibility.value) return
+  if (!visibility.value) return;
   popperInstance = createPopper(props.reference!, popperRef.value!, {
     placement: 'bottom-start',
-    modifiers: [{
-      name: 'offset',
-      options: {
-        offset: [0, 4],
+    modifiers: [
+      {
+        name: 'offset',
+        options: {
+          offset: [0, 4],
+        },
       },
-    }],
-  })
-  popperInstance.update()
+    ],
+  });
+  popperInstance.update();
 }
 function togglePicker(value = !colorPickVisibility.value) {
-  colorPickVisibility.value = value
+  colorPickVisibility.value = value;
 }
 
-const debounceTogglePicker = debounce(togglePicker, 100)
+const debounceTogglePicker = debounce(togglePicker, 100);
 
 function hide() {
-  debounceTogglePicker(false)
+  debounceTogglePicker(false);
 }
 
-watch(visibility, initializePopper)
+watch(visibility, initializePopper);
 onMounted(() => {
-  initializePopper()
-})
+  initializePopper();
+});
 onUnmounted(() => {
-  popperInstance?.destroy()
-  popperInstance = undefined
-})
+  popperInstance?.destroy();
+  popperInstance = undefined;
+});
 </script>
 
 <style lang="scss">
@@ -135,7 +137,7 @@ onUnmounted(() => {
   outline: 0;
   box-sizing: border-box;
   &::after {
-    content: "";
+    content: '';
     border-radius: 50%;
     background-color: #666;
     width: var(--size-width-height);

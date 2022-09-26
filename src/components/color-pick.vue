@@ -1,119 +1,145 @@
-<template>
-  <div ref="popperRef" class="color-picker flex-conter">
-    <div ref="hueRef" class="hue-bar"></div>
-    <div class="color-svpanel__wrap flex-conter">
-      <div ref="svRef" class="color-svpanel flex-conter" :style="{ backgroundColor: background }">
-        <div class="color-svpanel__white"></div>
-        <div class="color-svpanel__black"></div>
-        <div class="sv__cursor" :style="{ transform: svTransform }"></div>
-      </div>
-    </div>
-    <div class="hue__cursor" :style="{ transform: `translateX(81px) rotate(${hue}deg)` }"></div>
-  </div>
-</template>
-
 <script lang="ts" setup>
-import { computed, onMounted, reactive, ref, toRef, watch } from 'vue'
-import type { PropType } from 'vue'
-import draggable from 'src/util/draggable'
-import { default as Color } from 'src/util/color'
-import { createPopper } from '@popperjs/core'
-import type { Instance as PopperInstance } from '@popperjs/core'
-
-const props = withDefaults(defineProps<{
-  modelValue?: string
-  reference?: HTMLElement
-  visibility: boolean
-}>(), {
-  visibility: true
-})
+import { computed, onMounted, reactive, ref, toRef, watch } from 'vue';
+// import type { PropType } from 'vue'
+import { draggable } from 'src/util/draggable';
+import Color from 'src/util/color';
+import { createPopper } from '@popperjs/core';
+import type { Instance as PopperInstance } from '@popperjs/core';
+// The extension for the file (.vue) is non-standard. You should add "parserOptions.extraFileExtensions" to your config.
+const props = withDefaults(
+  defineProps<{
+    modelValue?: string;
+    reference?: HTMLElement;
+    visibility: boolean;
+  }>(),
+  {
+    visibility: true,
+  }
+);
 const emits = defineEmits<{
-  (event: 'update:modelValue', value: string): void
-}>()
-const visibility = toRef(props, 'visibility')
+  (event: 'update:modelValue', value: string): void;
+}>();
+const visibility = toRef(props, 'visibility');
 
-const popperRef = ref<HTMLElement>()
-const hueRef = ref<HTMLElement>()
-const svRef = ref<HTMLElement>()
-const svTransform = ref('')
-const hue = ref(0)
-let popperInstance: PopperInstance | undefined
-const color = reactive(new Color({
-  color: props.modelValue || '#ff0000',
-}))
+const popperRef = ref<HTMLElement>();
+const hueRef = ref<HTMLElement>();
+const svRef = ref<HTMLElement>();
+const svTransform = ref('');
+const hue = ref(0);
+let popperInstance: PopperInstance | undefined;
+const color = reactive(
+  new Color({
+    color: props.modelValue || '#ff0000',
+  })
+);
 
-const background = computed(() => 'hsl(' + color.hue + ', 100%, 50%)')
+const background = computed(() => `hsl(${color.hue}, 100%, 50%)`);
 
 function handleHueDrag(evt: MouseEvent) {
-  const el = hueRef.value
-  if (!el) return
-  const rect = el.getBoundingClientRect()
-  const [x0, y0] = [rect.left + rect.width / 2, rect.top + rect.height / 2]
-  const [dx, dy] = [evt.x - x0, evt.y - y0]
-  hue.value = Math.floor(Math.atan(dy / dx) * 180 / Math.PI)
-  if (dx < 0) hue.value += 180
-  if (hue.value < 0) hue.value += 360
-  color.update({ hue: hue.value })
+  const el = hueRef.value;
+  if (!el) return;
+  const rect = el.getBoundingClientRect();
+  const [x0, y0] = [rect.left + rect.width / 2, rect.top + rect.height / 2];
+  const [dx, dy] = [evt.x - x0, evt.y - y0];
+  hue.value = Math.floor((Math.atan(dy / dx) * 180) / Math.PI);
+  if (dx < 0) hue.value += 180;
+  if (hue.value < 0) hue.value += 360;
+  color.update({ hue: hue.value });
 }
 function handleSvDrag(event: MouseEvent) {
-  const el = svRef.value
-  if (!el) return
-  const rect = el.getBoundingClientRect()
-  const top = Math.min(Math.max(0, event.clientY - rect.top), rect.height)
-  const left = Math.min(Math.max(0, event.clientX - rect.left), rect.width)
-  const { width, height } = rect
+  const el = svRef.value;
+  if (!el) return;
+  const rect = el.getBoundingClientRect();
+  const top = Math.min(Math.max(0, event.clientY - rect.top), rect.height);
+  const left = Math.min(Math.max(0, event.clientX - rect.left), rect.width);
+  const { width, height } = rect;
   color.update({
-    saturation: left / width * 100,
-    value: 100 - top / height * 100,
-  })
+    saturation: (left / width) * 100,
+    value: 100 - (top / height) * 100,
+  });
 }
-watch(() => props.modelValue, val => {
-  val && color.fromString(val)
-})
-watch(() => color.color, val => {
-  emits('update:modelValue', val)
-})
+watch(
+  () => props.modelValue,
+  (val) => {
+    val && color.fromString(val);
+  }
+);
+watch(
+  () => color.color,
+  (val) => {
+    emits('update:modelValue', val);
+  }
+);
 watch([() => color.value, () => color.saturation], () => {
-  updateSv()
-})
-watch(() => color.hue, () => {
-  hue.value = color.hue
-})
+  updateSv();
+});
+watch(
+  () => color.hue,
+  () => {
+    hue.value = color.hue;
+  }
+);
 
 function updateSv() {
-  const { saturation, value } = color
+  const { saturation, value } = color;
 
-  const el = svRef.value
-  if (!el) return
-  const { clientWidth: width, clientHeight: height } = el
-  const [left, top] = [saturation * width / 100, (100 - value) * height / 100]
-  const [x, y] = [left - width / 2, top - height / 2]
+  const el = svRef.value;
+  if (!el) return;
+  const { clientWidth: width, clientHeight: height } = el;
+  const [left, top] = [
+    (saturation * width) / 100,
+    ((100 - value) * height) / 100,
+  ];
+  const [x, y] = [left - width / 2, top - height / 2];
 
-  svTransform.value = `translateX(${x}px) translateY(${y}px)`
+  svTransform.value = `translateX(${x}px) translateY(${y}px)`;
 }
 
 function initializePopper() {
-  if (!visibility.value) return
+  if (!visibility.value) return;
   popperInstance = createPopper(props.reference!, popperRef.value!, {
     placement: 'bottom-start',
-    modifiers: [{
-      name: 'offset',
-      options: {
-        offset: [0, 4],
+    modifiers: [
+      {
+        name: 'offset',
+        options: {
+          offset: [0, 4],
+        },
       },
-    }],
-  })
-  popperInstance.update()
+    ],
+  });
+  popperInstance.update();
 }
-watch(visibility, initializePopper)
+watch(visibility, initializePopper);
 
 onMounted(() => {
-  draggable(hueRef.value!, handleHueDrag)
-  draggable(svRef.value!, handleSvDrag)
-  updateSv()
-  initializePopper()
-})
+  draggable(hueRef.value!, handleHueDrag);
+  draggable(svRef.value!, handleSvDrag);
+  updateSv();
+  initializePopper();
+});
 </script>
+
+<template>
+  <div ref="popperRef" class="color-picker flex-conter">
+    <div ref="hueRef" class="hue-bar" />
+    <div class="color-svpanel__wrap flex-conter">
+      <div
+        ref="svRef"
+        class="color-svpanel flex-conter"
+        :style="{ backgroundColor: background }"
+      >
+        <div class="color-svpanel__white" />
+        <div class="color-svpanel__black" />
+        <div class="sv__cursor" :style="{ transform: svTransform }" />
+      </div>
+    </div>
+    <div
+      class="hue__cursor"
+      :style="{ transform: `translateX(81px) rotate(${hue}deg)` }"
+    />
+  </div>
+</template>
 
 <style lang="scss">
 .flex-conter {
@@ -121,11 +147,13 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
 }
+
 .color-picker {
   width: 240px;
   height: 200px;
   border: 1px solid #f7f7f7;
   background-color: #fff;
+
   .hue-bar {
     border: 1px solid #acacac;
     width: 180px;
@@ -144,6 +172,7 @@ onMounted(() => {
     );
   }
 }
+
 .color-svpanel__wrap {
   width: 140px;
   height: 140px;
@@ -152,10 +181,12 @@ onMounted(() => {
   background-color: #fff;
   border: 1px solid #acacac;
 }
+
 .color-svpanel {
   background-color: red;
   outline: 1px solid #acacac;
 }
+
 .color-svpanel,
 .color-svpanel__white,
 .color-svpanel__black {
@@ -164,12 +195,15 @@ onMounted(() => {
   height: 98px;
   position: absolute;
 }
+
 .color-svpanel__white {
   background: linear-gradient(90deg, #fff, hsla(0, 0%, 100%, 0));
 }
+
 .color-svpanel__black {
   background: linear-gradient(0deg, #000, transparent);
 }
+
 .hue__cursor,
 .sv__cursor {
   width: 8px;
@@ -181,6 +215,7 @@ onMounted(() => {
   position: absolute;
   // filter: invert(1);
 }
+
 .hue__cursor {
   // 81 - 8 / 2
   transform-origin: -77px center;
