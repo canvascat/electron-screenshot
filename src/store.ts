@@ -6,8 +6,8 @@ import type {
   CaptureLayer,
   Point,
   ToolAction,
-} from './type';
-import { DEFAULT_COLOR, DEFAULT_WIDTH } from './util/const';
+} from '@/type';
+import { DEFAULT_COLOR, DEFAULT_WIDTH } from '@/util/const';
 
 export const imageSource = new Image();
 
@@ -42,13 +42,13 @@ export function updateDrawBound(ah = actionHistory) {
     x: { min: 0, max: 0 },
     y: { min: 0, max: 0 },
   };
-  const path = ah.reduce(
+  const path = ah.reduce<Point[]>(
     (p, { path }) => (path && p.push(...path), p),
-    <Array<Point>>[]
+    []
   );
-  const [xps, yps] = path.reduce(
+  const [xps, yps] = path.reduce<[number[], number[]]>(
     (o, [x, y]) => (o[0].push(x), o[1].push(y), o),
-    [<Array<number>>[], <Array<number>>[]]
+    [[], []]
   );
   drawBound.value.x.min = Math.min(...xps);
   drawBound.value.x.max = Math.max(...xps);
@@ -59,7 +59,7 @@ export function updateDrawBound(ah = actionHistory) {
 /** 绘制马赛克的图片原始像素数据 */
 export const mosaicOriginalPxData = shallowRef<Uint8ClampedArray>();
 
-export const TOOL_ACTIONS: Array<ToolAction> = [
+export const TOOL_ACTIONS: ToolAction[] = [
   { icon: 'A', label: '添加文字(TODO)', id: 'TEXT', cursor: 'text' },
   {
     icon: '⬜',

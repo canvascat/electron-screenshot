@@ -48,7 +48,7 @@ export function once(
   type: string,
   fn: EventListener
 ): void {
-  const listener = function (evt: Event) {
+  const listener = function (this: any, evt: Event) {
     if (fn) fn.call(this, evt);
     off(el, <any>type, listener);
   };
