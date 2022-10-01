@@ -4,15 +4,12 @@ import {
   action,
   actionHistory,
   bound,
-  mainCanvas,
-  updateMainCanvas,
   captureLayer,
   drawBound,
   getToolById,
   initialized,
   mosaicOriginalPxData,
   updateDrawBound,
-  mainCtx,
 } from '@/store';
 import InfoBox from '@/components/info-box.vue';
 import ToolBox from '@/components/tool-box.vue';
@@ -32,19 +29,17 @@ import {
   removeResizeListener,
 } from '@/util/dom';
 import { cloneDeep, isEqual, throttle } from 'lodash';
-import { createMosaicData, updateCanvas } from '@/util/canvas';
+import { createMosaicData, updateSelection } from '@/util/canvas';
 import { CAPTURE_ACTION_IDS, TOOL_ACTION_IDS } from './util/const';
+import { RESIZE_POINTS } from './const';
+import { useCanvasStore } from './stores/canvas';
 
-const RESIZE_POINTS: ResizePoint[] = [
-  { position: ['top'], cursor: 'ns-resize' },
-  { position: ['bottom'], cursor: 'ns-resize' },
-  { position: ['left'], cursor: 'ew-resize' },
-  { position: ['right'], cursor: 'ew-resize' },
-  { position: ['top', 'left'], cursor: 'nwse-resize' },
-  { position: ['bottom', 'right'], cursor: 'nwse-resize' },
-  { position: ['top', 'right'], cursor: 'nesw-resize' },
-  { position: ['bottom', 'left'], cursor: 'nesw-resize' },
-];
+const store = useCanvasStore();
+
+// watch(captureLayer, (value) => {
+//   if (!store.selection) return;
+//   updateSelection(store.selection, value.x, value.y, value.w, value.h);
+// });
 
 const wrapRef = ref<HTMLDivElement>();
 let cursorDownPoint: Point | undefined;
@@ -66,22 +61,12 @@ const captureLayerStyle = computed(() => {
   return style;
 });
 
-watch(
-  mousePoint,
-  throttle((point) => {
-    if (!mainCtx.value || !point) return;
-    const { data } = mainCtx.value.getImageData(point[0], point[1], 1, 1);
-    RGB.value = data.slice(0, 3).join(', ');
-  })
-);
-
 const updateBound = throttle(async function () {
   const { clientHeight, clientWidth } = document.body;
   bound.x.max = clientWidth;
   bound.y.max = clientHeight;
   await nextTick();
-  if (!mainCtx.value) return;
-  updateCanvas(actionHistory, mainCtx.value);
+  store.updateMain(actionHistory);
 });
 
 function startCapture(e: MouseEvent) {
@@ -121,7 +106,8 @@ function onMousedownCaptureLayer(e: MouseEvent) {
     attr && Object.assign(step, { attr: cloneDeep(attr) });
     actionHistory.push(step);
     if (action.value === 'MOSAIC') {
-      mosaicOriginalPxData.value = createMosaicData(mainCtx.value!, 10);
+      // TODO:
+      // mosaicOriginalPxData.value = createMosaicData(mainCtx.value!, 10);
     }
     startAction(e);
   }
@@ -251,7 +237,7 @@ function onMousemoveDocument(e: MouseEvent) {
       default:
         return;
     }
-    updateCanvas(actionHistory, mainCtx.value!);
+    store.updateMain(actionHistory);
   }
 }
 
@@ -308,7 +294,9 @@ onUnmounted(() => {
 
 <template>
   <div ref="wrapRef" class="wrapper">
-    <canvas :ref="updateMainCanvas" :width="bound.x.max" :height="bound.y.max"></canvas>
+    <canvas name="main" :ref="(el: any) => store.main = el" :width="bound.x.max" :height="bound.y.max"></canvas>
+    <canvas name="selection" :ref="(el: any) => store.selection = el" :width="bound.x.max"
+      :height="bound.y.max"></canvas>
     <div class="capture-layer" :style="captureLayerStyle" @mousedown.left="onMousedownCaptureLayer">
       <button v-for="p in RESIZE_POINTS" :key="p.position.join()" :style="
         p.position.reduce((o, p) => Object.assign(o, { [p]: '-3px' }), {
@@ -316,10 +304,7 @@ onUnmounted(() => {
         })
       " class="resize-point" @mousedown.left.prevent="startResize($event, p)"></button>
     </div>
-    <info-box v-if="infoBoxVisible" :mouse-point="mousePoint">
-      <p>{{ captureLayer.w }} x {{ captureLayer.h }}</p>
-      <p>RGB({{ RGB }})</p>
-    </info-box>
+    <info-box v-if="infoBoxVisible" :mouse-point="mousePoint" />
   </div>
   <tool-box @dispatch="handleToolCmd" />
 </template>
@@ -334,7 +319,6 @@ onUnmounted(() => {
 }
 
 body {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   width: 100vw;
@@ -348,18 +332,18 @@ body {
   width: 100vw;
   height: 100vh;
   overflow: hidden;
+  background: #eee;
+  background-image: linear-gradient(45deg, #bbb 25%, transparent 0),
+    linear-gradient(45deg, transparent 75%, #bbb 0),
+    linear-gradient(45deg, #bbb 25%, transparent 0),
+    linear-gradient(45deg, transparent 75%, #bbb 0);
+  background-position: 0 0, 15px 15px, 15px 15px, 30px 30px;
+  background-size: 30px 30px;
 
   >canvas {
     position: absolute;
     top: 0;
     left: 0;
-    background: #eee;
-    background-image: linear-gradient(45deg, #bbb 25%, transparent 0),
-      linear-gradient(45deg, transparent 75%, #bbb 0),
-      linear-gradient(45deg, #bbb 25%, transparent 0),
-      linear-gradient(45deg, transparent 75%, #bbb 0);
-    background-position: 0 0, 15px 15px, 15px 15px, 30px 30px;
-    background-size: 30px 30px;
   }
 }
 

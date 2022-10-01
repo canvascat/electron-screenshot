@@ -19,19 +19,15 @@ import {
   action,
   actionHistory,
   bound,
-  mainCanvas,
   captureLayer,
   initialized,
   TOOL_ACTIONS,
   updateDrawBound,
-  mainCtx,
-  updateSource,
 } from '@/store';
-import type { CmdAction, CmdActionType, ToolActionType } from '@/type';
+import type { CmdActionType, ToolActionType } from '@/type';
 import {
   copyCanvas,
   downloadCanvas,
-  updateCanvas,
   writeCanvasToClipboard,
 } from '@/util/canvas';
 import {
@@ -50,17 +46,12 @@ import {
   type CSSProperties,
 } from 'vue';
 import { throttle } from 'lodash';
+import { useCanvasStore } from '@/stores/canvas';
+import { OPT_ACTIONS } from '@/const';
+
+const store = useCanvasStore();
 
 const OFFSET = { X: 0, Y: 6 };
-
-const OPT_ACTIONS: CmdAction[] = [
-  { icon: '↩', label: '撤销', id: 'RETURN' },
-  { icon: '⚡', label: '更换底图(使用本地文件)', id: 'USE_UPLOAD_FILE' },
-  { icon: '✂', label: '更换底图(使用屏幕快照)', id: 'USE_SCREEN_CAPTURE' },
-  { icon: '⬇', label: '保存(下载图片)', id: 'SAVE' },
-  { icon: '❌', label: '取消', id: 'CANCEL' },
-  { icon: '✔', label: '确定(复制到剪切板)', id: 'CONFIRM' },
-];
 
 const emits = defineEmits<{
   (e: 'dispatch', cmd: CmdActionType): void;
@@ -102,12 +93,12 @@ function handleExecCmd(cmd: CmdActionType) {
   switch (cmd) {
     case 'SAVE': {
       const { x, y, w, h } = captureLayer;
-      downloadCanvas(mainCanvas.value!, x, y, w, h);
+      downloadCanvas(store.main!, x, y, w, h);
       break;
     }
     case 'CONFIRM': {
       const { x, y, w, h } = captureLayer;
-      writeCanvasToClipboard(copyCanvas(mainCanvas.value!, x, y, w, h)).then(
+      writeCanvasToClipboard(copyCanvas(store.main!, x, y, w, h)).then(
         () => {
           createNotification({ body: '图片已复制' }, '提示');
         },
@@ -120,7 +111,7 @@ function handleExecCmd(cmd: CmdActionType) {
     case 'RETURN': {
       if (actionHistory.length === 0) break;
       actionHistory.pop();
-      updateCanvas(actionHistory, mainCtx.value!);
+      store.updateMain(actionHistory);
       updateDrawBound();
       break;
     }
@@ -131,16 +122,16 @@ function handleExecCmd(cmd: CmdActionType) {
       break;
     }
     case 'USE_UPLOAD_FILE': {
-      updateSource('file').then(() => {
+      store.setSource('file').then(() => {
         actionHistory.length = 0;
-        updateCanvas(actionHistory, mainCtx.value!);
+        store.updateMain(actionHistory);
       });
       break;
     }
     case 'USE_SCREEN_CAPTURE': {
-      updateSource('screenCapture').then(() => {
+      store.setSource('screenCapture').then(() => {
         actionHistory.length = 0;
-        updateCanvas(actionHistory, mainCtx.value!);
+        store.updateMain(actionHistory);
       });
       break;
     }

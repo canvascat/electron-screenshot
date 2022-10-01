@@ -1,4 +1,4 @@
-import { bound, mosaicOriginalPxData, mainCtx, sourceRef } from '@/store';
+import { bound, mosaicOriginalPxData } from '@/store';
 import type { ActionHistoryItem } from '@/type';
 import { DEFAULT_COLOR, DEFAULT_WIDTH } from './const';
 import {
@@ -66,7 +66,7 @@ export async function writeCanvasToClipboard(canvas: HTMLCanvasElement) {
 export function updateCanvas(
   actionHistory: ActionHistoryItem[],
   ctx: CanvasRenderingContext2D,
-  image: CanvasImageSource = sourceRef.value!
+  image: CanvasImageSource
 ) {
   ctx.clearRect(0, 0, bound.x.max, bound.y.max);
   ctx.drawImage(image, 0, 0);
@@ -105,3 +105,37 @@ export function updateCanvas(
     }
   });
 }
+
+/** 绘制选取 */
+export const updateSelection = (
+  el: HTMLCanvasElement,
+  x: number,
+  y: number,
+  w: number,
+  h: number
+) => {
+  const context = el.getContext('2d');
+  if (!context) return;
+  const { width, height } = el;
+  context.save();
+  context.clearRect(0, 0, width, height);
+  context.fillStyle = 'rgba(0, 0, 0, 0.6)';
+  context.fillRect(0, 0, width, height);
+  const LINE_WIDTH = 1;
+  const OFFSET = 3;
+  const SIZE = (OFFSET << 1) + LINE_WIDTH;
+  context.lineWidth = LINE_WIDTH;
+  context.fillStyle = context.strokeStyle = '#87ceeb';
+  context.clearRect(x, y, w, h);
+  context.strokeRect(x, y, w, h);
+  const point = { x: x - OFFSET, y: y - OFFSET };
+  context.fillRect(point.x, point.y, SIZE, SIZE);
+  context.fillRect((point.x += w / 2), point.y, SIZE, SIZE);
+  context.fillRect((point.x += w / 2), point.y, SIZE, SIZE);
+  context.fillRect(point.x, (point.y += h / 2), SIZE, SIZE);
+  context.fillRect(point.x, (point.y += h / 2), SIZE, SIZE);
+  context.fillRect((point.x -= w / 2), point.y, SIZE, SIZE);
+  context.fillRect((point.x -= w / 2), point.y, SIZE, SIZE);
+  context.fillRect(point.x, (point.y -= h / 2), SIZE, SIZE);
+  context.restore();
+};

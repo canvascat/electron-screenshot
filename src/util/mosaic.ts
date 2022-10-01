@@ -1,7 +1,7 @@
 import type { Point } from '@/type';
 
 /**
- * TODO: 利用 {@link drawCurve} 方法生成路径
+ * TODO: 利用 drawCurve 方法生成路径
  */
 export const createDrawMosaicLayerData = (
   width: number,
@@ -52,3 +52,44 @@ export function createMosaicData(ctx: CanvasRenderingContext2D, size = 10) {
   }
   return md;
 }
+
+/**
+ * 合并像素点
+ * @param source
+ * @param size
+ * @returns
+ */
+export const mergeImageDataPixel = (source: ImageData, size: number) => {
+  const { width, height, data, colorSpace } = source;
+  const nw = Math.ceil(width / size);
+  const nh = Math.ceil(height / size);
+  const nl = nw * nh;
+  const result = new Uint8ClampedArray(nl << 2);
+
+  for (let offset = 0; offset < nl; offset++) {
+    const sy = (offset / nh) | 0;
+    const sx = offset - sy * nh;
+    let sumR = 0,
+      sumG = 0,
+      sumB = 0,
+      total = 0;
+    for (let y = sy * size; y < Math.min((sy + 1) * size, height); y++) {
+      const startY = y * width;
+      for (let x = sx * size; x < Math.min((sx + 1) * size, width); x++) {
+        let sIndex = (startY + x) << 2;
+        if (data[sIndex + 3] === 0) continue;
+        sumR += data[sIndex++];
+        sumG += data[sIndex++];
+        sumB += data[sIndex];
+        total++;
+      }
+    }
+    result.set(
+      total === 0
+        ? [0, 0, 0, 0]
+        : [sumR / total, sumG / total, sumB / total, 255],
+      offset << 2
+    );
+  }
+  return new ImageData(result, width, height, { colorSpace });
+};

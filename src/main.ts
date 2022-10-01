@@ -1,7 +1,8 @@
 import { createApp } from 'vue';
+import { createPinia } from 'pinia';
 import App from './App.vue';
-import { updateSource } from './store';
 import { createImageURL } from './util/mock';
+import { useCanvasStore } from './stores/canvas';
 
 if (import.meta.env.PROD) {
   (<any>window)._hmt ??= [];
@@ -11,6 +12,11 @@ if (import.meta.env.PROD) {
   s!.parentNode!.insertBefore(hm, s);
 }
 
-updateSource(createImageURL(/* '/src/assets/2021-09-16 115153.png' */)).then(
-  () => createApp(App).mount('#app')
-);
+(async () => {
+  const pinia = createPinia();
+  const store = useCanvasStore(pinia);
+  await store.setSource('url', createImageURL());
+  const app = createApp(App);
+  app.use(pinia);
+  app.mount('#app');
+})();

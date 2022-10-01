@@ -173,3 +173,19 @@ export const loadLocalImage = (img = new Image()) =>
 
 export const loadScreenCaptureImage = (img = new Image()) =>
   getScreenCapture().then((file) => loadImage(URL.createObjectURL(file), img));
+
+export const createCanvasImageSource = async (
+  type: 'file' | 'screenCapture' | 'url',
+  url?: string
+) => {
+  switch (type) {
+    case 'file':
+      return await createImageBitmap(await loadLocalFile());
+    case 'screenCapture':
+      return await createImageBitmap(await getScreenCapture());
+    case 'url': {
+      const response = await fetch(url!);
+      return await createImageBitmap(await response.blob());
+    }
+  }
+};

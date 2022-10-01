@@ -1,37 +1,41 @@
 <template>
-  <div class="capture-info__wrap" :style="style">
-    <div class="capture-info__view">
-      <canvas ref="minCanvas" :width="DW" :height="DH"></canvas>
+  <div :class="$style['capture-info__wrap']" :style="style">
+    <div :class="$style['capture-info__view']">
+      <canvas :ref="(el: any) => store.min = el" :width="DW" :height="DH"></canvas>
       <svg viewBox="0 0 120 88" xmlns="http://www.w3.org/2000/svg" fill="none">
         <path d="M 0 1 H 119 V87 H1 V1" stroke="red" stroke-width="2" />
         <path d="M 0 44 H 119" stroke="red" stroke-width="2" />
         <path d="M 60 0 V 88" stroke="red" stroke-width="2" />
       </svg>
     </div>
-    <div class="capture-info__p">
-      <slot></slot>
+    <div :class="$style['capture-info__p']">
+      <p>{{ captureLayer.w }} x {{ captureLayer.h }}</p>
+      <p>RGB({{ RGB }})</p>
     </div>
   </div>
 </template>
 
 <script lang="ts" setup>
 import { computed, ref, watch, toRef, type CSSProperties } from 'vue';
-import { bound, mainCanvas } from '@/store';
+import { bound, captureLayer } from '@/store';
 import type { Point } from '@/type';
 import { throttle } from 'lodash';
+import { useCanvasStore } from '@/stores/canvas';
+
+const store = useCanvasStore();
 
 const SIZE = 120;
 const OFFSET = { X: 10, Y: 10 };
 const ZOOM_FACTOR = 4;
 const [DW, DH] = [120, 88];
 const [SW, SH] = [DW / ZOOM_FACTOR, DH / ZOOM_FACTOR];
+const RGB = ref('0, 0, 0');
 
 const props = defineProps<{
   mousePoint?: Point;
 }>();
 const mousePoint = toRef(props, 'mousePoint');
 
-const minCanvas = ref<HTMLCanvasElement>();
 const style = computed(() => {
   const style: CSSProperties = {};
   if (mousePoint?.value) {
@@ -48,12 +52,12 @@ const style = computed(() => {
 watch(
   mousePoint,
   throttle((point) => {
-    if (!point || !mainCanvas.value || !minCanvas.value) return;
+    if (!point || !store.main || !store.mainContext || !store.minContext)
+      return;
     const [x, y] = point;
-    const ctx = minCanvas.value.getContext('2d')!;
-    ctx.clearRect(0, 0, DW, DH);
-    ctx.drawImage(
-      mainCanvas.value,
+    store.minContext.clearRect(0, 0, DW, DH);
+    store.minContext.drawImage(
+      store.main,
       x - SW / 2,
       y - SH / 2,
       SW,
@@ -63,11 +67,13 @@ watch(
       DW,
       DH
     );
+    const { data } = store.mainContext.getImageData(point[0], point[1], 1, 1);
+    RGB.value = data.slice(0, 3).join(', ');
   })
 );
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss" module>
 .capture-info__wrap {
   width: 120px;
   height: 120px;
