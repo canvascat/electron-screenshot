@@ -1,5 +1,8 @@
 import type { Point } from '@/type';
 
+/**
+ * TODO: 利用 {@link drawCurve} 方法生成路径
+ */
 export const createDrawMosaicLayerData = (
   width: number,
   height: number,

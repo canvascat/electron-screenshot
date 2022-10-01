@@ -1,4 +1,4 @@
-import { reactive, ref, shallowReactive, shallowRef } from 'vue';
+import { computed, reactive, ref, shallowReactive, shallowRef } from 'vue';
 import type {
   ActionHistoryItem,
   Bound,
@@ -8,8 +8,35 @@ import type {
   ToolAction,
 } from '@/type';
 import { DEFAULT_COLOR, DEFAULT_WIDTH } from '@/util/const';
+import { loadLocalFile } from '@/util/dom';
+import { getScreenCapture } from '@/util/util';
 
-export const imageSource = new Image();
+export const sourceRef = ref<ImageBitmap>();
+
+export const updateSource = async (type: 'file' | 'screenCapture' | string) => {
+  let value: ImageBitmap;
+  switch (type) {
+    case 'file': {
+      const file = await loadLocalFile();
+      value = await createImageBitmap(file);
+      break;
+    }
+    case 'screenCapture': {
+      const file = await getScreenCapture();
+      value = await createImageBitmap(file);
+      break;
+    }
+    default: {
+      const response = await fetch(type);
+      const blob = await response.blob();
+      value = await createImageBitmap(blob);
+      break;
+    }
+  }
+  if (!value) return;
+  sourceRef.value?.close();
+  return (sourceRef.value = value);
+};
 
 export const initialized = ref(false);
 
@@ -27,7 +54,13 @@ export const captureLayer: CaptureLayer = reactive({
 
 export const action = ref<ActionType>();
 
-export const canvasRef = ref<HTMLCanvasElement>();
+export const mainCanvas = ref<HTMLCanvasElement>();
+
+export const mainCtx = computed(() => mainCanvas.value?.getContext('2d'));
+
+export const updateMainCanvas = (value?: any) => {
+  mainCanvas.value = value;
+};
 
 export const actionHistory = shallowReactive<ActionHistoryItem[]>([]);
 

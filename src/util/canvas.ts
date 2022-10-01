@@ -1,4 +1,4 @@
-import { bound, canvasRef, imageSource, mosaicOriginalPxData } from '@/store';
+import { bound, mosaicOriginalPxData, mainCtx, sourceRef } from '@/store';
 import type { ActionHistoryItem } from '@/type';
 import { DEFAULT_COLOR, DEFAULT_WIDTH } from './const';
 import {
@@ -65,8 +65,8 @@ export async function writeCanvasToClipboard(canvas: HTMLCanvasElement) {
 
 export function updateCanvas(
   actionHistory: ActionHistoryItem[],
-  ctx: CanvasRenderingContext2D = canvasRef.value!.getContext('2d')!,
-  image: CanvasImageSource = imageSource
+  ctx: CanvasRenderingContext2D,
+  image: CanvasImageSource = sourceRef.value!
 ) {
   ctx.clearRect(0, 0, bound.x.max, bound.y.max);
   ctx.drawImage(image, 0, 0);

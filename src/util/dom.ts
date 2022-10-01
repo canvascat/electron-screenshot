@@ -145,6 +145,12 @@ export const loadImage = (src: string, img = new Image()) =>
     }
   );
 
+export const createImageBitmapFromURL = async (url: string) => {
+  const response = await fetch(url);
+  const blob = await response.blob();
+  return await createImageBitmap(blob);
+};
+
 /** 加载本地文件 */
 export const loadLocalFile = (accept = 'image/png') =>
   new Promise((resolve: (file: File) => void, reject: () => void) => {
@@ -156,6 +162,11 @@ export const loadLocalFile = (accept = 'image/png') =>
     };
     input.click();
   });
+
+export const createImageBitmapFromFile = async () => {
+  const file = await loadLocalFile();
+  return await createImageBitmap(file);
+};
 
 export const loadLocalImage = (img = new Image()) =>
   loadLocalFile().then((file) => loadImage(URL.createObjectURL(file), img));

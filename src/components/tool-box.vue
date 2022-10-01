@@ -19,12 +19,13 @@ import {
   action,
   actionHistory,
   bound,
-  canvasRef,
+  mainCanvas,
   captureLayer,
-  imageSource,
   initialized,
   TOOL_ACTIONS,
   updateDrawBound,
+  mainCtx,
+  updateSource,
 } from '@/store';
 import type { CmdAction, CmdActionType, ToolActionType } from '@/type';
 import {
@@ -101,12 +102,12 @@ function handleExecCmd(cmd: CmdActionType) {
   switch (cmd) {
     case 'SAVE': {
       const { x, y, w, h } = captureLayer;
-      downloadCanvas(canvasRef.value!, x, y, w, h);
+      downloadCanvas(mainCanvas.value!, x, y, w, h);
       break;
     }
     case 'CONFIRM': {
       const { x, y, w, h } = captureLayer;
-      writeCanvasToClipboard(copyCanvas(canvasRef.value!, x, y, w, h)).then(
+      writeCanvasToClipboard(copyCanvas(mainCanvas.value!, x, y, w, h)).then(
         () => {
           createNotification({ body: '图片已复制' }, '提示');
         },
@@ -119,7 +120,7 @@ function handleExecCmd(cmd: CmdActionType) {
     case 'RETURN': {
       if (actionHistory.length === 0) break;
       actionHistory.pop();
-      updateCanvas(actionHistory);
+      updateCanvas(actionHistory, mainCtx.value!);
       updateDrawBound();
       break;
     }
@@ -130,20 +131,16 @@ function handleExecCmd(cmd: CmdActionType) {
       break;
     }
     case 'USE_UPLOAD_FILE': {
-      const oldSrc = imageSource.src;
-      loadLocalImage(imageSource).then(() => {
+      updateSource('file').then(() => {
         actionHistory.length = 0;
-        updateCanvas(actionHistory);
-        URL.revokeObjectURL(oldSrc);
+        updateCanvas(actionHistory, mainCtx.value!);
       });
       break;
     }
     case 'USE_SCREEN_CAPTURE': {
-      const oldSrc = imageSource.src;
-      loadScreenCaptureImage(imageSource).then(() => {
+      updateSource('screenCapture').then(() => {
         actionHistory.length = 0;
-        updateCanvas(actionHistory);
-        URL.revokeObjectURL(oldSrc);
+        updateCanvas(actionHistory, mainCtx.value!);
       });
       break;
     }

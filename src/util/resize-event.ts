@@ -1,8 +1,8 @@
 type CustomizedHTMLElement<T> = HTMLElement & T;
 
 export type ResizableElement = CustomizedHTMLElement<{
-  __resizeListeners__: Array<(...args: unknown[]) => unknown>;
-  __ro__: ResizeObserver;
+  __resizeListeners__?: Array<(...args: unknown[]) => unknown>;
+  __ro__?: ResizeObserver;
 }>;
 
 const resizeHandler = function (entries: ResizeObserverEntry[]) {
@@ -40,6 +40,6 @@ export const removeResizeListener = function (
     1
   );
   if (!element.__resizeListeners__.length) {
-    element.__ro__.disconnect();
+    element.__ro__?.disconnect();
   }
 };

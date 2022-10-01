@@ -4,14 +4,15 @@ import {
   action,
   actionHistory,
   bound,
-  canvasRef,
+  mainCanvas,
+  updateMainCanvas,
   captureLayer,
   drawBound,
   getToolById,
-  imageSource,
   initialized,
   mosaicOriginalPxData,
   updateDrawBound,
+  mainCtx,
 } from '@/store';
 import InfoBox from '@/components/info-box.vue';
 import ToolBox from '@/components/tool-box.vue';
@@ -65,13 +66,11 @@ const captureLayerStyle = computed(() => {
   return style;
 });
 
-const ctx = computed(() => canvasRef.value?.getContext('2d'));
-
 watch(
   mousePoint,
   throttle((point) => {
-    if (!ctx.value || !point) return;
-    const { data } = ctx.value.getImageData(point[0], point[1], 1, 1);
+    if (!mainCtx.value || !point) return;
+    const { data } = mainCtx.value.getImageData(point[0], point[1], 1, 1);
     RGB.value = data.slice(0, 3).join(', ');
   })
 );
@@ -81,7 +80,8 @@ const updateBound = throttle(async function () {
   bound.x.max = clientWidth;
   bound.y.max = clientHeight;
   await nextTick();
-  updateCanvas(actionHistory, ctx.value!, imageSource);
+  if (!mainCtx.value) return;
+  updateCanvas(actionHistory, mainCtx.value);
 });
 
 function startCapture(e: MouseEvent) {
@@ -121,7 +121,7 @@ function onMousedownCaptureLayer(e: MouseEvent) {
     attr && Object.assign(step, { attr: cloneDeep(attr) });
     actionHistory.push(step);
     if (action.value === 'MOSAIC') {
-      mosaicOriginalPxData.value = createMosaicData(ctx.value!, 10);
+      mosaicOriginalPxData.value = createMosaicData(mainCtx.value!, 10);
     }
     startAction(e);
   }
@@ -251,7 +251,7 @@ function onMousemoveDocument(e: MouseEvent) {
       default:
         return;
     }
-    updateCanvas(actionHistory, ctx.value!, imageSource);
+    updateCanvas(actionHistory, mainCtx.value!);
   }
 }
 
@@ -300,7 +300,6 @@ function handleToolCmd(cmd: CmdActionType) {
 onMounted(() => {
   addResizeListener(document.body as any, updateBound);
   initCapture();
-  // document.body.appendChild(imageSource)
 });
 onUnmounted(() => {
   removeResizeListener(document.body as any, updateBound);
@@ -309,7 +308,7 @@ onUnmounted(() => {
 
 <template>
   <div ref="wrapRef" class="wrapper">
-    <canvas ref="canvasRef" :width="bound.x.max" :height="bound.y.max"></canvas>
+    <canvas :ref="updateMainCanvas" :width="bound.x.max" :height="bound.y.max"></canvas>
     <div class="capture-layer" :style="captureLayerStyle" @mousedown.left="onMousedownCaptureLayer">
       <button v-for="p in RESIZE_POINTS" :key="p.position.join()" :style="
         p.position.reduce((o, p) => Object.assign(o, { [p]: '-3px' }), {
@@ -317,7 +316,7 @@ onUnmounted(() => {
         })
       " class="resize-point" @mousedown.left.prevent="startResize($event, p)"></button>
     </div>
-    <info-box v-if="infoBoxVisible" :mouse-point="mousePoint" :canvas="canvasRef">
+    <info-box v-if="infoBoxVisible" :mouse-point="mousePoint">
       <p>{{ captureLayer.w }} x {{ captureLayer.h }}</p>
       <p>RGB({{ RGB }})</p>
     </info-box>

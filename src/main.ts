@@ -1,8 +1,7 @@
-import { random } from 'lodash';
 import { createApp } from 'vue';
 import App from './App.vue';
-import { imageSource } from './store';
-import { loadImage } from './util/dom';
+import { updateSource } from './store';
+import { createImageURL } from './util/mock';
 
 if (import.meta.env.PROD) {
   (<any>window)._hmt ??= [];
@@ -12,19 +11,6 @@ if (import.meta.env.PROD) {
   s!.parentNode!.insertBefore(hm, s);
 }
 
-async function createRandomImage(input?: string) {
-  if (!input) {
-    const modules = Object.values(
-      import.meta.glob<false, '*.jpg', { default: string }>('./assets/*.jpg')
-    );
-    const importModule = modules[random(modules.length) - 1];
-    const module = await importModule();
-    input = module.default;
-  }
-  const response = await fetch(input);
-  return await response.blob();
-}
-
-createRandomImage('/src/assets/2021-09-16 115153.png')
-  .then((b) => loadImage(URL.createObjectURL(b), imageSource))
-  .then(() => createApp(App).mount('#app'));
+updateSource(createImageURL(/* '/src/assets/2021-09-16 115153.png' */)).then(
+  () => createApp(App).mount('#app')
+);

@@ -1,7 +1,7 @@
 <template>
   <div class="capture-info__wrap" :style="style">
     <div class="capture-info__view">
-      <canvas ref="canvasRef" :width="DW" :height="DH"></canvas>
+      <canvas ref="minCanvas" :width="DW" :height="DH"></canvas>
       <svg viewBox="0 0 120 88" xmlns="http://www.w3.org/2000/svg" fill="none">
         <path d="M 0 1 H 119 V87 H1 V1" stroke="red" stroke-width="2" />
         <path d="M 0 44 H 119" stroke="red" stroke-width="2" />
@@ -16,7 +16,7 @@
 
 <script lang="ts" setup>
 import { computed, ref, watch, toRef, type CSSProperties } from 'vue';
-import { bound } from '@/store';
+import { bound, mainCanvas } from '@/store';
 import type { Point } from '@/type';
 import { throttle } from 'lodash';
 
@@ -28,11 +28,10 @@ const [SW, SH] = [DW / ZOOM_FACTOR, DH / ZOOM_FACTOR];
 
 const props = defineProps<{
   mousePoint?: Point;
-  canvas?: HTMLCanvasElement;
 }>();
 const mousePoint = toRef(props, 'mousePoint');
 
-const canvasRef = ref<HTMLCanvasElement>();
+const minCanvas = ref<HTMLCanvasElement>();
 const style = computed(() => {
   const style: CSSProperties = {};
   if (mousePoint?.value) {
@@ -49,12 +48,21 @@ const style = computed(() => {
 watch(
   mousePoint,
   throttle((point) => {
-    const { canvas } = props;
-    if (!point || !canvas || !canvasRef.value) return;
+    if (!point || !mainCanvas.value || !minCanvas.value) return;
     const [x, y] = point;
-    const ctx = canvasRef.value.getContext('2d')!;
+    const ctx = minCanvas.value.getContext('2d')!;
     ctx.clearRect(0, 0, DW, DH);
-    ctx.drawImage(canvas, x - SW / 2, y - SH / 2, SW, SH, 0, 0, DW, DH);
+    ctx.drawImage(
+      mainCanvas.value,
+      x - SW / 2,
+      y - SH / 2,
+      SW,
+      SH,
+      0,
+      0,
+      DW,
+      DH
+    );
   })
 );
 </script>
