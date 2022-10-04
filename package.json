@@ -23,7 +23,8 @@
     "@popperjs/core": "^2.11.6",
     "lodash": "^4.17.21",
     "pinia": "^2.0.22",
-    "vue": "^3.2.39"
+    "vue": "^3.2.39",
+    "wasm-util": "workspace:^1.0.0"
   },
   "devDependencies": {
     "@rushstack/eslint-patch": "^1.1.4",
@@ -48,6 +49,7 @@
     "typescript": "~4.7.4",
     "typescript-plugin-css-modules": "^3.4.0",
     "vite": "^3.0.9",
+    "vite-plugin-wasm": "^3.0.0",
     "vitest": "^0.23.0",
     "vue-tsc": "^0.40.7"
   }

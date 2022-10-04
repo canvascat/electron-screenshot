@@ -1,66 +1,71 @@
 lockfileVersion: 5.4
 
-specifiers:
-  '@popperjs/core': ^2.11.6
-  '@rushstack/eslint-patch': ^1.1.4
-  '@types/jsdom': ^20.0.0
-  '@types/lodash': ^4.14.185
-  '@types/node': ^18.7.19
-  '@types/stats.js': ^0.17.0
-  '@vitejs/plugin-vue': ^3.0.3
-  '@vitejs/plugin-vue-jsx': ^2.0.1
-  '@vue/eslint-config-prettier': ^7.0.0
-  '@vue/eslint-config-typescript': ^11.0.0
-  '@vue/test-utils': ^2.0.2
-  '@vue/tsconfig': ^0.1.3
-  eslint: ^8.22.0
-  eslint-plugin-vue: ^9.3.0
-  gh-pages: ^4.0.0
-  jsdom: ^20.0.0
-  lodash: ^4.17.21
-  npm-run-all: ^4.1.5
-  pinia: ^2.0.22
-  prettier: ^2.7.1
-  sass: ^1.55.0
-  stats.js: ^0.17.0
-  typescript: ~4.7.4
-  typescript-plugin-css-modules: ^3.4.0
-  vite: ^3.0.9
-  vitest: ^0.23.0
-  vue: ^3.2.39
-  vue-tsc: ^0.40.7
+importers:
 
-dependencies:
-  '@popperjs/core': 2.11.6
-  lodash: 4.17.21
-  pinia: 2.0.22_uxrvejtcwrakwzzo6hlouuo2vq
-  vue: 3.2.39
-
-devDependencies:
-  '@rushstack/eslint-patch': 1.2.0
-  '@types/jsdom': 20.0.0
-  '@types/lodash': 4.14.185
-  '@types/node': 18.7.19
-  '@types/stats.js': 0.17.0
-  '@vitejs/plugin-vue': 3.1.0_vite@3.1.3+vue@3.2.39
-  '@vitejs/plugin-vue-jsx': 2.0.1_vite@3.1.3+vue@3.2.39
-  '@vue/eslint-config-prettier': 7.0.0_uoqzb7ub56apwdxrwurswvvfwe
-  '@vue/eslint-config-typescript': 11.0.2_kpxf5iryryrlim2ejhkirkiuey
-  '@vue/test-utils': 2.0.2_vue@3.2.39
-  '@vue/tsconfig': 0.1.3_@types+node@18.7.19
-  eslint: 8.24.0
-  eslint-plugin-vue: 9.5.1_eslint@8.24.0
-  gh-pages: 4.0.0
-  jsdom: 20.0.0
-  npm-run-all: 4.1.5
-  prettier: 2.7.1
-  sass: 1.55.0
-  stats.js: 0.17.0
-  typescript: 4.7.4
-  typescript-plugin-css-modules: 3.4.0_typescript@4.7.4
-  vite: 3.1.3_sass@1.55.0
-  vitest: 0.23.4_jsdom@20.0.0+sass@1.55.0
-  vue-tsc: 0.40.13_typescript@4.7.4
+  .:
+    specifiers:
+      '@popperjs/core': ^2.11.6
+      '@rushstack/eslint-patch': ^1.1.4
+      '@types/jsdom': ^20.0.0
+      '@types/lodash': ^4.14.185
+      '@types/node': ^18.7.19
+      '@types/stats.js': ^0.17.0
+      '@vitejs/plugin-vue': ^3.0.3
+      '@vitejs/plugin-vue-jsx': ^2.0.1
+      '@vue/eslint-config-prettier': ^7.0.0
+      '@vue/eslint-config-typescript': ^11.0.0
+      '@vue/test-utils': ^2.0.2
+      '@vue/tsconfig': ^0.1.3
+      eslint: ^8.22.0
+      eslint-plugin-vue: ^9.3.0
+      gh-pages: ^4.0.0
+      jsdom: ^20.0.0
+      lodash: ^4.17.21
+      npm-run-all: ^4.1.5
+      pinia: ^2.0.22
+      prettier: ^2.7.1
+      sass: ^1.55.0
+      stats.js: ^0.17.0
+      typescript: ~4.7.4
+      typescript-plugin-css-modules: ^3.4.0
+      vite: ^3.0.9
+      vite-plugin-wasm: ^3.0.0
+      vitest: ^0.23.0
+      vue: ^3.2.39
+      vue-tsc: ^0.40.7
+      wasm-util: workspace:^1.0.0
+    dependencies:
+      '@popperjs/core': 2.11.6
+      lodash: 4.17.21
+      pinia: 2.0.22_uxrvejtcwrakwzzo6hlouuo2vq
+      vue: 3.2.39
+      wasm-util: link:packages/wasm-util
+    devDependencies:
+      '@rushstack/eslint-patch': 1.2.0
+      '@types/jsdom': 20.0.0
+      '@types/lodash': 4.14.185
+      '@types/node': 18.7.19
+      '@types/stats.js': 0.17.0
+      '@vitejs/plugin-vue': 3.1.0_vite@3.1.3+vue@3.2.39
+      '@vitejs/plugin-vue-jsx': 2.0.1_vite@3.1.3+vue@3.2.39
+      '@vue/eslint-config-prettier': 7.0.0_uoqzb7ub56apwdxrwurswvvfwe
+      '@vue/eslint-config-typescript': 11.0.2_kpxf5iryryrlim2ejhkirkiuey
+      '@vue/test-utils': 2.0.2_vue@3.2.39
+      '@vue/tsconfig': 0.1.3_@types+node@18.7.19
+      eslint: 8.24.0
+      eslint-plugin-vue: 9.5.1_eslint@8.24.0
+      gh-pages: 4.0.0
+      jsdom: 20.0.0
+      npm-run-all: 4.1.5
+      prettier: 2.7.1
+      sass: 1.55.0
+      stats.js: 0.17.0
+      typescript: 4.7.4
+      typescript-plugin-css-modules: 3.4.0_typescript@4.7.4
+      vite: 3.1.3_sass@1.55.0
+      vite-plugin-wasm: 3.0.0_sass@1.55.0
+      vitest: 0.23.4_jsdom@20.0.0+sass@1.55.0
+      vue-tsc: 0.40.13_typescript@4.7.4
 
 packages:
 
@@ -3594,6 +3599,17 @@ packages:
     dependencies:
       spdx-correct: 3.1.1
       spdx-expression-parse: 3.0.1
+    dev: true
+
+  /vite-plugin-wasm/3.0.0_sass@1.55.0:
+    resolution: {integrity: sha512-lOqR2waEZSl3xAlGoiAqSrPXoxZqTfTYPIuCLVATZSsegJ8zmD1M0GPPN7PGfAzex2KeJLCCxdmbHFVMRN+4pA==}
+    dependencies:
+      vite: 3.1.3_sass@1.55.0
+    transitivePeerDependencies:
+      - less
+      - sass
+      - stylus
+      - terser
     dev: true
 
   /vite/3.1.3_sass@1.55.0:

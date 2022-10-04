@@ -1,0 +1,20 @@
+{
+  "name": "wasm-util",
+  "version": "1.0.0",
+  "description": "rust wasm util",
+  "author": "canvascat<canvascat@qq.com>",
+  "homepage": "https://canvascat.github.io/electron-screenshot",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/canvascat/electron-screenshot.git"
+  },
+  "files": [
+    "pkg/wasm_util_bg.wasm",
+    "pkg/wasm_util.d.ts"
+  ],
+  "main": "pkg/wasm_util.js",
+  "types": "pkg/wasm_util.d.ts",
+  "scripts": {
+    "build": "wasm-pack build"
+  }
+}
